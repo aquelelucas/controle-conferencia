@@ -7,18 +7,13 @@
 
   <meta
     name="viewport"
-    content="width=device-width,
-             initial-scale=1,
-             maximum-scale=1,
-             user-scalable=no"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
   >
 
   <title>King - Conferência</title>
 
-  <!-- Biblioteca para leitura de código de barras -->
-  <script src="https://unpkg.com/html5-qrcode"
-          type="text/javascript">
-  </script>
+  <!-- Leitor de código de barras -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
 
@@ -29,190 +24,142 @@
     body {
       margin: 0;
       padding: 0;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
       background: #f2f4f7;
+      font-family: Arial, Helvetica, sans-serif;
       color: #222;
     }
 
     .container {
       width: 100%;
       max-width: 500px;
-
       margin: auto;
-
-      padding: 16px;
+      padding: 15px;
     }
 
     .card {
-      background: white;
-
+      background: #fff;
       border-radius: 18px;
-
       padding: 20px;
-
-      box-shadow:
-        0 3px 15px
-        rgba(0,0,0,0.12);
+      box-shadow: 0 3px 15px rgba(0,0,0,.12);
     }
 
     .logo {
       text-align: center;
-
-      font-size: 26px;
-
+      font-size: 28px;
       font-weight: bold;
-
-      margin-bottom: 5px;
+      color: #111;
     }
 
     .subtitulo {
       text-align: center;
-
       color: #666;
-
+      margin-top: 4px;
       margin-bottom: 20px;
     }
 
     label {
       display: block;
-
       font-weight: bold;
-
       margin-bottom: 7px;
     }
 
     select {
       width: 100%;
-
-      padding: 14px;
-
+      padding: 15px;
       font-size: 18px;
-
       border: 1px solid #ccc;
-
       border-radius: 10px;
-
       background: white;
     }
 
     button {
       width: 100%;
-
       padding: 16px;
-
       border: 0;
-
       border-radius: 10px;
-
       font-size: 18px;
-
       font-weight: bold;
-
+      margin-top: 15px;
       cursor: pointer;
-
-      margin-top: 14px;
     }
 
     .btn-iniciar {
       background: #1976d2;
-
-      color: white;
-    }
-
-    .btn-camera {
-      background: #00897b;
-
       color: white;
     }
 
     .btn-parar {
       background: #c62828;
-
       color: white;
     }
 
     .contador {
       text-align: center;
-
-      margin: 18px 0;
-
-      font-size: 21px;
-
+      font-size: 20px;
       font-weight: bold;
+      margin: 15px 0;
     }
 
     .numero {
       color: #1976d2;
-
-      font-size: 28px;
+      font-size: 30px;
     }
 
     #reader {
       width: 100%;
-
-      margin-top: 15px;
-
       overflow: hidden;
-
       border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    .instrucao {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin: 10px 0;
     }
 
     .status {
-      margin-top: 15px;
-
       padding: 15px;
-
+      margin-top: 15px;
       border-radius: 10px;
-
       text-align: center;
-
-      font-size: 17px;
-
       font-weight: bold;
+      font-size: 17px;
     }
 
     .sucesso {
       background: #e8f5e9;
-
       color: #2e7d32;
     }
 
     .erro {
       background: #ffebee;
-
       color: #c62828;
+    }
+
+    .aviso {
+      background: #fff8e1;
+      color: #8a6500;
     }
 
     .ultimo {
       margin-top: 15px;
-
       padding: 15px;
-
-      background: #f1f8ff;
-
       border-radius: 10px;
-
+      background: #f1f8ff;
       text-align: center;
     }
 
     .ultimo-label {
       color: #666;
-
       font-size: 14px;
     }
 
     .ultimo-pedido {
-      font-size: 32px;
-
-      font-weight: bold;
-
       color: #1976d2;
-
+      font-size: 32px;
+      font-weight: bold;
       margin-top: 5px;
     }
 
@@ -220,14 +167,10 @@
       display: none;
     }
 
-    .instrucao {
+    .carregando {
       text-align: center;
-
       color: #666;
-
-      margin-top: 10px;
-
-      font-size: 14px;
+      padding: 15px;
     }
 
   </style>
@@ -237,11 +180,9 @@
 
 <body>
 
-
 <div class="container">
 
   <div class="card">
-
 
     <div class="logo">
       KING
@@ -252,7 +193,9 @@
     </div>
 
 
-    <!-- TELA INICIAL -->
+    <!-- ========================= -->
+    <!-- TELA INICIAL              -->
+    <!-- ========================= -->
 
     <div id="telaInicial">
 
@@ -263,23 +206,7 @@
       <select id="conferente">
 
         <option value="">
-          Selecione seu nome
-        </option>
-
-        <option value="João">
-          João
-        </option>
-
-        <option value="Maria">
-          Maria
-        </option>
-
-        <option value="Carlos">
-          Carlos
-        </option>
-
-        <option value="Pedro">
-          Pedro
+          Carregando...
         </option>
 
       </select>
@@ -287,7 +214,7 @@
 
       <button
         class="btn-iniciar"
-        onclick="iniciar()"
+        onclick="iniciarConferencia()"
       >
         INICIAR CONFERÊNCIA
       </button>
@@ -295,7 +222,9 @@
     </div>
 
 
-    <!-- TELA DE CONFERÊNCIA -->
+    <!-- ========================= -->
+    <!-- TELA DE CONFERÊNCIA       -->
+    <!-- ========================= -->
 
     <div
       id="telaConferencia"
@@ -316,22 +245,28 @@
       </div>
 
 
+      <!-- CÂMERA -->
+
       <div id="reader"></div>
 
 
       <div class="instrucao">
 
-        Aponte a câmera para o
-        código de barras do pedido.
+        Aponte a câmera para o código
+        de barras do pedido.
 
       </div>
 
+
+      <!-- STATUS -->
 
       <div
         id="status"
         class="status oculto"
       ></div>
 
+
+      <!-- ÚLTIMO PEDIDO -->
 
       <div
         id="ultimo"
@@ -352,16 +287,13 @@
 
 
       <button
-        id="btnParar"
         class="btn-parar"
-        onclick="pararCamera()"
+        onclick="finalizarConferencia()"
       >
-        PARAR CÂMERA
+        FINALIZAR CONFERÊNCIA
       </button>
 
-
     </div>
-
 
   </div>
 
@@ -371,20 +303,22 @@
 <script>
 
 
-/*
- * URL DO SEU GOOGLE APPS SCRIPT
- */
+/* =====================================================
+   CONFIGURAÇÃO
+   ===================================================== */
+
 
 const URL_API =
   'https://script.google.com/macros/s/AKfycbz6MPJDRTuGldQQt9DE9KdmZSaM18kQoIxFx6sJFrEY5pVozJv8sq6iA8ErZwptL4PK/exec';
 
 
-/*
- * Mesma chave colocada no Code.gs
- */
-
 const CHAVE =
   'KING-CONFERENCIA-2026';
+
+
+/* =====================================================
+   VARIÁVEIS
+   ===================================================== */
 
 
 let conferente = '';
@@ -395,15 +329,217 @@ let processando = false;
 
 let ultimoCodigo = '';
 
-let ultimoHorario = 0;
+let ultimoMomento = 0;
 
 
-/*
- * INICIA A CONFERÊNCIA
- */
+/* =====================================================
+   CONTADOR LOCAL
+   ===================================================== */
 
-function iniciar() {
+function chaveContador() {
 
+  const hoje =
+    new Date()
+      .toISOString()
+      .substring(0, 10);
+
+  return (
+    'contador_' +
+    hoje +
+    '_' +
+    conferente
+  );
+
+}
+
+
+function obterContadorLocal() {
+
+  const chave =
+    chaveContador();
+
+  return parseInt(
+    localStorage.getItem(chave) || '0',
+    10
+  );
+
+}
+
+
+function salvarContadorLocal(valor) {
+
+  localStorage.setItem(
+    chaveContador(),
+    String(valor)
+  );
+
+}
+
+
+function atualizarTelaContador() {
+
+  document
+    .getElementById('contador')
+    .textContent =
+    obterContadorLocal();
+
+}
+
+
+/* =====================================================
+   CARREGAR CONFERENTES
+   ===================================================== */
+
+function carregarConferentes() {
+
+  const callback =
+    'callbackConferentes_' +
+    Date.now();
+
+
+  window[callback] =
+    function(dados) {
+
+      try {
+
+        if (
+          !dados ||
+          !dados.sucesso
+        ) {
+
+          throw new Error(
+            dados &&
+            dados.erro
+              ? dados.erro
+              : 'Erro ao carregar conferentes.'
+          );
+
+        }
+
+
+        const select =
+          document.getElementById(
+            'conferente'
+          );
+
+
+        select.innerHTML =
+          '<option value="">Selecione seu nome</option>';
+
+
+        dados.conferentes.forEach(
+          function(nome) {
+
+            const option =
+              document.createElement(
+                'option'
+              );
+
+            option.value = nome;
+
+            option.textContent = nome;
+
+            select.appendChild(
+              option
+            );
+
+          }
+        );
+
+
+      } catch (erro) {
+
+        mostrarStatus(
+          erro.message,
+          true
+        );
+
+      }
+
+
+      removerScript(callback);
+
+    };
+
+
+  const script =
+    document.createElement('script');
+
+
+  script.src =
+    URL_API +
+    '?acao=conferentes' +
+    '&chave=' +
+    encodeURIComponent(CHAVE) +
+    '&callback=' +
+    callback;
+
+
+  script.onerror =
+    function() {
+
+      mostrarStatus(
+        'Não foi possível carregar os conferentes.',
+        true
+      );
+
+      removerScript(callback);
+
+    };
+
+
+  document.body.appendChild(
+    script
+  );
+
+}
+
+
+function removerScript(nomeCallback) {
+
+  const scripts =
+    document.querySelectorAll(
+      'script'
+    );
+
+
+  scripts.forEach(
+    function(script) {
+
+      if (
+        script.src &&
+        script.src.includes(
+          nomeCallback
+        )
+      ) {
+
+        script.remove();
+
+      }
+
+    }
+  );
+
+
+  try {
+    delete window[nomeCallback];
+  } catch (e) {}
+
+}
+
+
+/* =====================================================
+   INICIALIZAÇÃO
+   ===================================================== */
+
+carregarConferentes();
+
+
+/* =====================================================
+   INICIAR CONFERÊNCIA
+   ===================================================== */
+
+function iniciarConferencia() {
 
   const select =
     document.getElementById(
@@ -414,7 +550,7 @@ function iniciar() {
   if (!select.value) {
 
     alert(
-      'Selecione seu nome.'
+      'Selecione o seu nome.'
     );
 
     return;
@@ -424,6 +560,9 @@ function iniciar() {
 
   conferente =
     select.value;
+
+
+  atualizarTelaContador();
 
 
   document
@@ -449,12 +588,11 @@ function iniciar() {
 }
 
 
-/*
- * INICIA A CÂMERA
- */
+/* =====================================================
+   CÂMERA
+   ===================================================== */
 
 function iniciarCamera() {
-
 
   scanner =
     new Html5Qrcode(
@@ -462,32 +600,51 @@ function iniciarCamera() {
     );
 
 
-  const config = {
+  const formatos = [
+
+    Html5QrcodeSupportedFormats.CODE_128,
+
+    Html5QrcodeSupportedFormats.CODE_39,
+
+    Html5QrcodeSupportedFormats.CODE_93,
+
+    Html5QrcodeSupportedFormats.EAN_13,
+
+    Html5QrcodeSupportedFormats.EAN_8,
+
+    Html5QrcodeSupportedFormats.UPC_A,
+
+    Html5QrcodeSupportedFormats.UPC_E
+
+  ];
+
+
+  const configuracao = {
 
     fps: 10,
 
-    qrbox: {
-      width: 280,
-      height: 140
-    },
+    formatsToSupport: formatos,
 
-    formatsToSupport: [
+    qrbox: function(
+      largura,
+      altura
+    ) {
 
-      Html5QrcodeSupportedFormats.CODE_128,
+      const tamanho =
+        Math.min(
+          largura * 0.85,
+          350
+        );
 
-      Html5QrcodeSupportedFormats.CODE_39,
+      return {
+        width: tamanho,
+        height: Math.min(
+          tamanho * 0.45,
+          altura * 0.7
+        )
+      };
 
-      Html5QrcodeSupportedFormats.CODE_93,
-
-      Html5QrcodeSupportedFormats.EAN_13,
-
-      Html5QrcodeSupportedFormats.EAN_8,
-
-      Html5QrcodeSupportedFormats.UPC_A,
-
-      Html5QrcodeSupportedFormats.UPC_E
-
-    ]
+    }
 
   };
 
@@ -498,41 +655,48 @@ function iniciarCamera() {
       facingMode: 'environment'
     },
 
-    config,
+    configuracao,
 
-    codigoLido,
+    quandoCodigoForLido,
 
-    function(error) {
+    function() {
 
-      // Não fazemos nada.
-      // A câmera continua procurando.
+      // Ignora tentativas
+      // que ainda não encontraram código.
 
     }
 
   )
-  .catch(function(error) {
 
-    mostrarStatus(
-      'Não foi possível acessar a câmera. Verifique a permissão do navegador.',
-      true
-    );
+  .catch(
+    function(erro) {
 
-  });
+      mostrarStatus(
+        'Não foi possível abrir a câmera. Verifique se o navegador permitiu o acesso à câmera.',
+        true
+      );
+
+      console.error(
+        erro
+      );
+
+    }
+  );
 
 }
 
 
-/*
- * QUANDO O CÓDIGO É LIDO
- */
+/* =====================================================
+   CÓDIGO DE BARRAS FOI LIDO
+   ===================================================== */
 
-function codigoLido(
+function quandoCodigoForLido(
   codigo
 ) {
 
-
   codigo =
-    String(codigo).trim();
+    String(codigo)
+      .trim();
 
 
   if (!codigo) {
@@ -541,10 +705,9 @@ function codigoLido(
 
 
   /*
-   * Evita registrar várias vezes
-   * o mesmo código porque a câmera
-   * pode enxergar o código por vários
-   * frames consecutivos.
+   * Evita que a câmera registre
+   * o mesmo pedido várias vezes
+   * em sequência.
    */
 
   const agora =
@@ -555,7 +718,7 @@ function codigoLido(
 
     codigo === ultimoCodigo &&
 
-    agora - ultimoHorario < 5000
+    agora - ultimoMomento < 5000
 
   ) {
 
@@ -567,7 +730,7 @@ function codigoLido(
   ultimoCodigo =
     codigo;
 
-  ultimoHorario =
+  ultimoMomento =
     agora;
 
 
@@ -578,21 +741,21 @@ function codigoLido(
 }
 
 
-/*
- * REGISTRA O PEDIDO
- */
+/* =====================================================
+   REGISTRAR PEDIDO
+   ===================================================== */
 
 function registrarPedido(
   pedido
 ) {
-
 
   if (processando) {
     return;
   }
 
 
-  processando = true;
+  processando =
+    true;
 
 
   mostrarStatus(
@@ -603,13 +766,96 @@ function registrarPedido(
   );
 
 
+  const callback =
+    'callbackRegistro_' +
+    Date.now();
+
+
+  window[callback] =
+    function(dados) {
+
+      try {
+
+        if (
+          !dados ||
+          !dados.sucesso
+        ) {
+
+          throw new Error(
+            dados &&
+            dados.erro
+              ? dados.erro
+              : 'Não foi possível registrar o pedido.'
+          );
+
+        }
+
+
+        /*
+         * A API confirmou que o pedido
+         * chegou ao Google Sheets.
+         */
+
+        adicionarAoContador();
+
+
+        document
+          .getElementById(
+            'ultimo'
+          )
+          .classList.remove(
+            'oculto'
+          );
+
+
+        document
+          .getElementById(
+            'ultimoPedido'
+          )
+          .textContent =
+          dados.pedido;
+
+
+        mostrarStatus(
+          '✓ Pedido ' +
+          dados.pedido +
+          ' registrado!',
+          false
+        );
+
+
+      } catch (erro) {
+
+        mostrarStatus(
+          erro.message,
+          true
+        );
+
+      }
+
+
+      processando =
+        false;
+
+
+      removerScript(
+        callback
+      );
+
+    };
+
+
   /*
-   * Usamos GET porque o Apps Script
-   * pode ser acessado diretamente
-   * pelo navegador.
+   * Chamada para o Google Apps Script
    */
 
-  const url =
+  const script =
+    document.createElement(
+      'script'
+    );
+
+
+  script.src =
 
     URL_API +
 
@@ -628,171 +874,185 @@ function registrarPedido(
     '&pedido=' +
     encodeURIComponent(
       pedido
-    );
+    ) +
+
+    '&callback=' +
+    callback;
 
 
-  fetch(
-    url,
-    {
-      method: 'GET',
-      mode: 'no-cors'
-    }
-  )
+  script.onerror =
+    function() {
 
-  .then(function() {
+      processando =
+        false;
 
 
-    /*
-     * Como estamos usando no-cors,
-     * o navegador não permite ler
-     * a resposta do Google.
-     *
-     * Mas a requisição foi enviada.
-     */
-
-    mostrarStatus(
-      '✓ Pedido ' +
-      pedido +
-      ' registrado!',
-      false
-    );
-
-
-    document
-      .getElementById(
-        'ultimo'
-      )
-      .classList.remove(
-        'oculto'
+      mostrarStatus(
+        'Erro de comunicação com o Google Sheets.',
+        true
       );
 
 
-    document
-      .getElementById(
-        'ultimoPedido'
-      )
-      .textContent =
-      pedido;
+      removerScript(
+        callback
+      );
+
+    };
 
 
-    atualizarQuantidade();
-
-
-    setTimeout(
-      function() {
-
-        processando =
-          false;
-
-      },
-      1200
-    );
-
-
-  })
-
-  .catch(function(error) {
-
-
-    processando =
-      false;
-
-
-    mostrarStatus(
-      'Erro ao registrar o pedido.',
-      true
-    );
-
-  });
+  document.body.appendChild(
+    script
+  );
 
 }
 
 
-/*
- * ATUALIZA CONTADOR
- */
+/* =====================================================
+   AUMENTAR CONTADOR
+   ===================================================== */
 
-function atualizarQuantidade() {
+function adicionarAoContador() {
 
-
-  const url =
-
-    URL_API +
-
-    '?acao=quantidade' +
-
-    '&chave=' +
-    encodeURIComponent(
-      CHAVE
-    ) +
-
-    '&conferente=' +
-    encodeURIComponent(
-      conferente
-    );
+  const atual =
+    obterContadorLocal();
 
 
-  /*
-   * Para este primeiro MVP,
-   * usamos uma requisição que não
-   * precisa expor a resposta ao
-   * navegador.
-   *
-   * O contador será aprimorado
-   * na próxima etapa.
-   */
+  const novo =
+    atual + 1;
+
+
+  salvarContadorLocal(
+    novo
+  );
+
+
+  document
+    .getElementById(
+      'contador'
+    )
+    .textContent =
+    novo;
 
 }
 
 
-/*
- * PARA A CÂMERA
- */
+/* =====================================================
+   FINALIZAR
+   ===================================================== */
 
-function pararCamera() {
+function finalizarConferencia() {
 
+  if (!confirm(
+    'Deseja finalizar esta conferência?'
+  )) {
 
-  if (!scanner) {
     return;
+
   }
 
 
-  scanner
-    .stop()
-    .then(function() {
+  if (scanner) {
 
-      scanner.clear();
+    scanner
+      .stop()
+      .then(
+        function() {
 
-      document
-        .getElementById(
-          'reader'
-        )
-        .innerHTML = '';
+          scanner.clear();
 
-      mostrarStatus(
-        'Câmera parada.',
-        false
+          voltarInicio();
+
+        }
+      )
+      .catch(
+        function() {
+
+          voltarInicio();
+
+        }
       );
 
-    })
-    .catch(function(error) {
+  } else {
 
-      console.log(error);
+    voltarInicio();
 
-    });
+  }
 
 }
 
 
-/*
- * MOSTRA MENSAGEM
- */
+/* =====================================================
+   VOLTAR PARA TELA INICIAL
+   ===================================================== */
+
+function voltarInicio() {
+
+  document
+    .getElementById(
+      'telaConferencia'
+    )
+    .classList.add(
+      'oculto'
+    );
+
+
+  document
+    .getElementById(
+      'telaInicial'
+    )
+    .classList.remove(
+      'oculto'
+    );
+
+
+  document
+    .getElementById(
+      'reader'
+    )
+    .innerHTML = '';
+
+
+  document
+    .getElementById(
+      'status'
+    )
+    .classList.add(
+      'oculto'
+    );
+
+
+  document
+    .getElementById(
+      'ultimo'
+    )
+    .classList.add(
+      'oculto'
+    );
+
+
+  scanner =
+    null;
+
+  conferente =
+    '';
+
+  ultimoCodigo =
+    '';
+
+  ultimoMomento =
+    0;
+
+}
+
+
+/* =====================================================
+   MENSAGENS
+   ===================================================== */
 
 function mostrarStatus(
   mensagem,
   erro
 ) {
-
 
   const status =
     document.getElementById(
@@ -807,7 +1067,8 @@ function mostrarStatus(
   status.classList.remove(
     'oculto',
     'erro',
-    'sucesso'
+    'sucesso',
+    'aviso'
   );
 
 
@@ -826,7 +1087,6 @@ function mostrarStatus(
   }
 
 }
-
 
 </script>
 
