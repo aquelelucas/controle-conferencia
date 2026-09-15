@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1,
+             maximum-scale=1,
+             user-scalable=no"
+  >
+
+  <title>King - Conferência</title>
+
+  <!-- Biblioteca para leitura de código de barras -->
+  <script src="https://unpkg.com/html5-qrcode"
+          type="text/javascript">
+  </script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background: #f2f4f7;
+      color: #222;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+
+      margin: auto;
+
+      padding: 16px;
+    }
+
+    .card {
+      background: white;
+
+      border-radius: 18px;
+
+      padding: 20px;
+
+      box-shadow:
+        0 3px 15px
+        rgba(0,0,0,0.12);
+    }
+
+    .logo {
+      text-align: center;
+
+      font-size: 26px;
+
+      font-weight: bold;
+
+      margin-bottom: 5px;
+    }
+
+    .subtitulo {
+      text-align: center;
+
+      color: #666;
+
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+
+      font-weight: bold;
+
+      margin-bottom: 7px;
+    }
+
+    select {
+      width: 100%;
+
+      padding: 14px;
+
+      font-size: 18px;
+
+      border: 1px solid #ccc;
+
+      border-radius: 10px;
+
+      background: white;
+    }
+
+    button {
+      width: 100%;
+
+      padding: 16px;
+
+      border: 0;
+
+      border-radius: 10px;
+
+      font-size: 18px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+      margin-top: 14px;
+    }
+
+    .btn-iniciar {
+      background: #1976d2;
+
+      color: white;
+    }
+
+    .btn-camera {
+      background: #00897b;
+
+      color: white;
+    }
+
+    .btn-parar {
+      background: #c62828;
+
+      color: white;
+    }
+
+    .contador {
+      text-align: center;
+
+      margin: 18px 0;
+
+      font-size: 21px;
+
+      font-weight: bold;
+    }
+
+    .numero {
+      color: #1976d2;
+
+      font-size: 28px;
+    }
+
+    #reader {
+      width: 100%;
+
+      margin-top: 15px;
+
+      overflow: hidden;
+
+      border-radius: 12px;
+    }
+
+    .status {
+      margin-top: 15px;
+
+      padding: 15px;
+
+      border-radius: 10px;
+
+      text-align: center;
+
+      font-size: 17px;
+
+      font-weight: bold;
+    }
+
+    .sucesso {
+      background: #e8f5e9;
+
+      color: #2e7d32;
+    }
+
+    .erro {
+      background: #ffebee;
+
+      color: #c62828;
+    }
+
+    .ultimo {
+      margin-top: 15px;
+
+      padding: 15px;
+
+      background: #f1f8ff;
+
+      border-radius: 10px;
+
+      text-align: center;
+    }
+
+    .ultimo-label {
+      color: #666;
+
+      font-size: 14px;
+    }
+
+    .ultimo-pedido {
+      font-size: 32px;
+
+      font-weight: bold;
+
+      color: #1976d2;
+
+      margin-top: 5px;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    .instrucao {
+      text-align: center;
+
+      color: #666;
+
+      margin-top: 10px;
+
+      font-size: 14px;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+  <div class="card">
+
+
+    <div class="logo">
+      KING
+    </div>
+
+    <div class="subtitulo">
+      Controle de Conferência
+    </div>
+
+
+    <!-- TELA INICIAL -->
+
+    <div id="telaInicial">
+
+      <label>
+        Conferente
+      </label>
+
+      <select id="conferente">
+
+        <option value="">
+          Selecione seu nome
+        </option>
+
+        <option value="João">
+          João
+        </option>
+
+        <option value="Maria">
+          Maria
+        </option>
+
+        <option value="Carlos">
+          Carlos
+        </option>
+
+        <option value="Pedro">
+          Pedro
+        </option>
+
+      </select>
+
+
+      <button
+        class="btn-iniciar"
+        onclick="iniciar()"
+      >
+        INICIAR CONFERÊNCIA
+      </button>
+
+    </div>
+
+
+    <!-- TELA DE CONFERÊNCIA -->
+
+    <div
+      id="telaConferencia"
+      class="oculto"
+    >
+
+      <div class="contador">
+
+        Pedidos hoje:
+
+        <span
+          id="contador"
+          class="numero"
+        >
+          0
+        </span>
+
+      </div>
+
+
+      <div id="reader"></div>
+
+
+      <div class="instrucao">
+
+        Aponte a câmera para o
+        código de barras do pedido.
+
+      </div>
+
+
+      <div
+        id="status"
+        class="status oculto"
+      ></div>
+
+
+      <div
+        id="ultimo"
+        class="ultimo oculto"
+      >
+
+        <div class="ultimo-label">
+          Último pedido registrado
+        </div>
+
+        <div
+          id="ultimoPedido"
+          class="ultimo-pedido"
+        >
+        </div>
+
+      </div>
+
+
+      <button
+        id="btnParar"
+        class="btn-parar"
+        onclick="pararCamera()"
+      >
+        PARAR CÂMERA
+      </button>
+
+
+    </div>
+
+
+  </div>
+
+</div>
+
+
+<script>
+
+
+/*
+ * URL DO SEU GOOGLE APPS SCRIPT
+ */
+
+const URL_API =
+  'https://script.google.com/macros/s/AKfycbz6MPJDRTuGldQQt9DE9KdmZSaM18kQoIxFx6sJFrEY5pVozJv8sq6iA8ErZwptL4PK/exec';
+
+
+/*
+ * Mesma chave colocada no Code.gs
+ */
+
+const CHAVE =
+  'KING-CONFERENCIA-2026';
+
+
+let conferente = '';
+
+let scanner = null;
+
+let processando = false;
+
+let ultimoCodigo = '';
+
+let ultimoHorario = 0;
+
+
+/*
+ * INICIA A CONFERÊNCIA
+ */
+
+function iniciar() {
+
+
+  const select =
+    document.getElementById(
+      'conferente'
+    );
+
+
+  if (!select.value) {
+
+    alert(
+      'Selecione seu nome.'
+    );
+
+    return;
+
+  }
+
+
+  conferente =
+    select.value;
+
+
+  document
+    .getElementById(
+      'telaInicial'
+    )
+    .classList.add(
+      'oculto'
+    );
+
+
+  document
+    .getElementById(
+      'telaConferencia'
+    )
+    .classList.remove(
+      'oculto'
+    );
+
+
+  iniciarCamera();
+
+}
+
+
+/*
+ * INICIA A CÂMERA
+ */
+
+function iniciarCamera() {
+
+
+  scanner =
+    new Html5Qrcode(
+      'reader'
+    );
+
+
+  const config = {
+
+    fps: 10,
+
+    qrbox: {
+      width: 280,
+      height: 140
+    },
+
+    formatsToSupport: [
+
+      Html5QrcodeSupportedFormats.CODE_128,
+
+      Html5QrcodeSupportedFormats.CODE_39,
+
+      Html5QrcodeSupportedFormats.CODE_93,
+
+      Html5QrcodeSupportedFormats.EAN_13,
+
+      Html5QrcodeSupportedFormats.EAN_8,
+
+      Html5QrcodeSupportedFormats.UPC_A,
+
+      Html5QrcodeSupportedFormats.UPC_E
+
+    ]
+
+  };
+
+
+  scanner.start(
+
+    {
+      facingMode: 'environment'
+    },
+
+    config,
+
+    codigoLido,
+
+    function(error) {
+
+      // Não fazemos nada.
+      // A câmera continua procurando.
+
+    }
+
+  )
+  .catch(function(error) {
+
+    mostrarStatus(
+      'Não foi possível acessar a câmera. Verifique a permissão do navegador.',
+      true
+    );
+
+  });
+
+}
+
+
+/*
+ * QUANDO O CÓDIGO É LIDO
+ */
+
+function codigoLido(
+  codigo
+) {
+
+
+  codigo =
+    String(codigo).trim();
+
+
+  if (!codigo) {
+    return;
+  }
+
+
+  /*
+   * Evita registrar várias vezes
+   * o mesmo código porque a câmera
+   * pode enxergar o código por vários
+   * frames consecutivos.
+   */
+
+  const agora =
+    Date.now();
+
+
+  if (
+
+    codigo === ultimoCodigo &&
+
+    agora - ultimoHorario < 5000
+
+  ) {
+
+    return;
+
+  }
+
+
+  ultimoCodigo =
+    codigo;
+
+  ultimoHorario =
+    agora;
+
+
+  registrarPedido(
+    codigo
+  );
+
+}
+
+
+/*
+ * REGISTRA O PEDIDO
+ */
+
+function registrarPedido(
+  pedido
+) {
+
+
+  if (processando) {
+    return;
+  }
+
+
+  processando = true;
+
+
+  mostrarStatus(
+    'Registrando pedido ' +
+    pedido +
+    '...',
+    false
+  );
+
+
+  /*
+   * Usamos GET porque o Apps Script
+   * pode ser acessado diretamente
+   * pelo navegador.
+   */
+
+  const url =
+
+    URL_API +
+
+    '?acao=registrar' +
+
+    '&chave=' +
+    encodeURIComponent(
+      CHAVE
+    ) +
+
+    '&conferente=' +
+    encodeURIComponent(
+      conferente
+    ) +
+
+    '&pedido=' +
+    encodeURIComponent(
+      pedido
+    );
+
+
+  fetch(
+    url,
+    {
+      method: 'GET',
+      mode: 'no-cors'
+    }
+  )
+
+  .then(function() {
+
+
+    /*
+     * Como estamos usando no-cors,
+     * o navegador não permite ler
+     * a resposta do Google.
+     *
+     * Mas a requisição foi enviada.
+     */
+
+    mostrarStatus(
+      '✓ Pedido ' +
+      pedido +
+      ' registrado!',
+      false
+    );
+
+
+    document
+      .getElementById(
+        'ultimo'
+      )
+      .classList.remove(
+        'oculto'
+      );
+
+
+    document
+      .getElementById(
+        'ultimoPedido'
+      )
+      .textContent =
+      pedido;
+
+
+    atualizarQuantidade();
+
+
+    setTimeout(
+      function() {
+
+        processando =
+          false;
+
+      },
+      1200
+    );
+
+
+  })
+
+  .catch(function(error) {
+
+
+    processando =
+      false;
+
+
+    mostrarStatus(
+      'Erro ao registrar o pedido.',
+      true
+    );
+
+  });
+
+}
+
+
+/*
+ * ATUALIZA CONTADOR
+ */
+
+function atualizarQuantidade() {
+
+
+  const url =
+
+    URL_API +
+
+    '?acao=quantidade' +
+
+    '&chave=' +
+    encodeURIComponent(
+      CHAVE
+    ) +
+
+    '&conferente=' +
+    encodeURIComponent(
+      conferente
+    );
+
+
+  /*
+   * Para este primeiro MVP,
+   * usamos uma requisição que não
+   * precisa expor a resposta ao
+   * navegador.
+   *
+   * O contador será aprimorado
+   * na próxima etapa.
+   */
+
+}
+
+
+/*
+ * PARA A CÂMERA
+ */
+
+function pararCamera() {
+
+
+  if (!scanner) {
+    return;
+  }
+
+
+  scanner
+    .stop()
+    .then(function() {
+
+      scanner.clear();
+
+      document
+        .getElementById(
+          'reader'
+        )
+        .innerHTML = '';
+
+      mostrarStatus(
+        'Câmera parada.',
+        false
+      );
+
+    })
+    .catch(function(error) {
+
+      console.log(error);
+
+    });
+
+}
+
+
+/*
+ * MOSTRA MENSAGEM
+ */
+
+function mostrarStatus(
+  mensagem,
+  erro
+) {
+
+
+  const status =
+    document.getElementById(
+      'status'
+    );
+
+
+  status.textContent =
+    mensagem;
+
+
+  status.classList.remove(
+    'oculto',
+    'erro',
+    'sucesso'
+  );
+
+
+  if (erro) {
+
+    status.classList.add(
+      'erro'
+    );
+
+  } else {
+
+    status.classList.add(
+      'sucesso'
+    );
+
+  }
+
+}
+
+
+</script>
+
+</body>
+
+</html>
