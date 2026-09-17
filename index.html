@@ -1,22 +1,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"><meta name="theme-color" content="#111827"><title>King - Conferência</title><script src="https://unpkg.com/html5-qrcode"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#111827">
+<title>King - Conferência</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <style>
 *{box-sizing:border-box}:root{--bg:#f4f6f8;--card:#fff;--text:#17202a;--muted:#6b7280;--border:#e5e7eb;--blue:#1769aa;--blue-dark:#0f4f82;--blue-soft:#eef6ff;--green:#16803c;--green-soft:#ecfdf3;--red:#b4232a;--red-soft:#fff1f2;--yellow:#f4b400;--shadow:0 10px 30px rgba(17,24,39,.08)}body{margin:0;min-height:100vh;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}.container{width:100%;max-width:560px;margin:auto;padding:18px 14px 28px}.card{background:#fff;border:1px solid rgba(229,231,235,.9);border-radius:22px;padding:20px;box-shadow:var(--shadow)}.brand{display:flex;align-items:center;justify-content:center;gap:9px}.brand-mark{width:11px;height:11px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px #fff7d6}.logo{font-size:27px;line-height:1;font-weight:800;letter-spacing:.04em}.subtitulo{text-align:center;color:var(--muted);font-size:14px;margin:7px 0 22px}.section-title{font-size:18px;font-weight:700;margin:0 0 14px}.field-label{display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:7px}select{width:100%;min-height:52px;padding:13px 42px 13px 14px;font-size:16px;color:var(--text);border:1px solid #d1d5db;border-radius:12px;background:#fff;outline:0}select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,105,170,.12)}button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:.02em;cursor:pointer;transition:transform .12s ease,opacity .12s ease}button:active{transform:scale(.985)}button:disabled{opacity:.6;cursor:not-allowed}.btn-iniciar{margin-top:14px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue-dark));box-shadow:0 7px 18px rgba(23,105,170,.22)}.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.atual{min-width:0}.label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.nome{margin-top:3px;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.online{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:800;white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:#22a447}.contador-card{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;margin-bottom:14px;background:var(--blue-soft);border:1px solid #dceeff;border-radius:15px}.contador-label{color:#4b5563;font-size:13px;font-weight:700}.contador-sub{margin-top:3px;color:#7b8794;font-size:11px}.numero{color:var(--blue);font-size:31px;line-height:1;font-weight:800}.camera-title{display:flex;align-items:center;gap:7px;margin:0 0 8px;color:#374151;font-size:13px;font-weight:700}.camera-wrapper{overflow:hidden;border-radius:16px;background:#111827;border:1px solid #dbe2e8}#reader{width:100%;overflow:hidden}#reader video{border-radius:15px}.instrucao{text-align:center;color:var(--muted);font-size:13px;line-height:1.45;margin:10px 8px 0}.status{padding:13px 14px;margin-top:14px;border-radius:12px;text-align:center;font-weight:700;font-size:14px;line-height:1.35}.sucesso{background:var(--green-soft);color:var(--green)}.erro{background:var(--red-soft);color:var(--red)}.ultimo{margin-top:12px;padding:15px;border-radius:14px;background:#f8fafc;border:1px solid var(--border);text-align:center}.ultimo-label{color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.ultimo-pedido{color:var(--blue);font-size:28px;font-weight:800;margin-top:5px;word-break:break-word}.btn-parar{margin-top:18px;color:#fff;background:var(--red);box-shadow:0 5px 14px rgba(180,35,42,.12)}.rodape{margin-top:15px;text-align:center;color:#9ca3af;font-size:11px}.oculto{display:none!important}@media(max-width:380px){.container{padding:10px 9px 20px}.card{padding:16px;border-radius:18px}.numero{font-size:28px}.nome{max-width:170px}}
-</style></head>
-<body><div class="container"><div class="card">
-<div class="brand"><span class="brand-mark"></span><div class="logo">KING</div></div><div class="subtitulo">Controle de Conferência</div>
-<div id="telaInicial"><div class="section-title">Iniciar conferência</div><label class="field-label" for="separador">Separador</label><select id="separador"><option value="">Carregando...</option></select><button class="btn-iniciar" onclick="iniciarConferencia()">INICIAR CONFERÊNCIA</button><div class="rodape">Selecione seu nome para começar</div></div>
-<div id="telaConferencia" class="oculto"><div class="topbar"><div class="atual"><div class="label">Separador</div><div id="separadorAtual" class="nome">-</div></div><div class="online"><span class="dot"></span>EM CONFERÊNCIA</div></div><div class="contador-card"><div><div class="contador-label">Pedidos conferidos</div><div class="contador-sub">Contagem de hoje</div></div><span id="contador" class="numero">0</span></div><div class="camera-title"><span>▣</span>Leitura do código de barras</div><div class="camera-wrapper"><div id="reader"></div></div><div class="instrucao">Aponte a câmera para o código de barras do pedido.</div><div id="status" class="status oculto"></div><div id="ultimo" class="ultimo oculto"><div class="ultimo-label">Último pedido registrado</div><div id="ultimoPedido" class="ultimo-pedido"></div></div><button class="btn-parar" onclick="finalizarConferencia()">FINALIZAR CONFERÊNCIA</button></div>
+</style>
+</head>
+<body>
+<div class="container"><div class="card">
+<div class="brand"><span class="brand-mark"></span><div class="logo">KING</div></div>
+<div class="subtitulo">Controle de Conferência</div>
+<div id="telaInicial">
+<div class="section-title">Iniciar conferência</div>
+<label class="field-label" for="separador">Separador</label>
+<select id="separador"><option value="">Carregando...</option></select>
+<button id="btnIniciar" class="btn-iniciar" onclick="iniciarConferencia()" disabled>INICIAR CONFERÊNCIA</button>
+<div id="carregamento" class="rodape">Carregando separadores...</div>
+</div>
+<div id="telaConferencia" class="oculto">
+<div class="topbar"><div class="atual"><div class="label">Separador</div><div id="separadorAtual" class="nome">-</div></div><div class="online"><span class="dot"></span>EM CONFERÊNCIA</div></div>
+<div class="contador-card"><div><div class="contador-label">Pedidos conferidos</div><div class="contador-sub">Contagem de hoje</div></div><span id="contador" class="numero">0</span></div>
+<div class="camera-title"><span>▣</span>Leitura do código de barras</div>
+<div class="camera-wrapper"><div id="reader"></div></div>
+<div class="instrucao">Aponte a câmera para o código de barras do pedido.</div>
+<div id="status" class="status oculto"></div>
+<div id="ultimo" class="ultimo oculto"><div class="ultimo-label">Último pedido registrado</div><div id="ultimoPedido" class="ultimo-pedido"></div></div>
+<button class="btn-parar" onclick="finalizarConferencia()">FINALIZAR CONFERÊNCIA</button>
+</div>
 </div></div>
 <script>
-const URL_API='https://script.google.com/macros/s/AKfycbw35QaB2JHTZWeZOWP1QtRJSBa9lLt29JvJi23P4yfqjx0tav2innM_LkmpEy2OCaBu/exec';const CHAVE='KING-CONFERENCIA-2026';let separador='',scanner=null,processando=false,ultimoCodigo='',ultimoMomento=0,contadorAtual=0;
+const URL_API='https://script.google.com/macros/s/AKfycbw35QaB2JHTZWeZOWP1QtRJSBa9Lt29JvJi23P4yfqjx0tav2innM_LkmpEy2OCaBu/exec';
+const CHAVE='KING-CONFERENCIA-2026';
+let separador='',scanner=null,processando=false,ultimoCodigo='',ultimoMomento=0,contadorAtual=0;
 function mostrarStatus(msg,erro){const e=document.getElementById('status');e.textContent=msg;e.className='status '+(erro?'erro':'sucesso')}
 function ocultarStatus(){document.getElementById('status').className='status oculto'}
 function removerScript(nome){document.querySelectorAll('script').forEach(s=>{if(s.src&&s.src.includes(nome))s.remove()});try{delete window[nome]}catch(e){}}
 function chamarApi(params,sucesso,erro){const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*10000),script=document.createElement('script');let terminou=false;params={...params,chave:CHAVE,callback:cb};const timer=setTimeout(()=>{if(terminou)return;terminou=true;removerScript(cb);erro(new Error('Tempo esgotado ao comunicar com o Google Sheets.'))},12000);window[cb]=d=>{if(terminou)return;terminou=true;clearTimeout(timer);removerScript(cb);sucesso(d)};script.onerror=()=>{if(terminou)return;terminou=true;clearTimeout(timer);removerScript(cb);erro(new Error('Erro de comunicação com o Google Sheets.'))};script.src=URL_API+'?'+new URLSearchParams(params).toString();document.body.appendChild(script)}
-function carregarSeparadores(){chamarApi({acao:'separadores'},d=>{if(!d||!d.sucesso){throw new Error(d&&d.erro?d.erro:'Erro ao carregar separadores.')}const s=document.getElementById('separador');s.innerHTML='<option value="">Selecione seu nome</option>';(d.separadores||[]).forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o)})},e=>{document.getElementById('separador').innerHTML='<option value="">Não foi possível carregar</option>';alert(e.message)})}
+function preencherSeparadores(lista){const s=document.getElementById('separador');s.innerHTML='<option value="">Selecione seu nome</option>';lista.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o)});document.getElementById('btnIniciar').disabled=lista.length===0;document.getElementById('carregamento').textContent=lista.length?'Selecione seu nome para começar':'Nenhum separador cadastrado'}
+function carregarSeparadores(){
+  document.getElementById('carregamento').textContent='Carregando separadores...';
+  chamarApi({acao:'separadores'},d=>{
+    try{
+      if(d&&d.sucesso&&Array.isArray(d.separadores)){preencherSeparadores(d.separadores);return}
+      throw new Error(d&&d.erro?d.erro:'Resposta inválida para separadores.');
+    }catch(e){
+      chamarApi({acao:'conferentes'},d2=>{
+        try{
+          if(d2&&d2.sucesso&&Array.isArray(d2.conferentes)){preencherSeparadores(d2.conferentes);return}
+          throw new Error(d2&&d2.erro?d2.erro:'Resposta inválida.');
+        }catch(e2){mostrarErroInicial(e2.message)}
+      },mostrarErroInicial)
+    }
+  },()=>{
+    chamarApi({acao:'conferentes'},d=>{
+      try{
+        if(d&&d.sucesso&&Array.isArray(d.conferentes)){preencherSeparadores(d.conferentes);return}
+        throw new Error(d&&d.erro?d.erro:'Não foi possível carregar os nomes.');
+      }catch(e){mostrarErroInicial(e.message)}
+    },mostrarErroInicial)
+  });
+}
+function mostrarErroInicial(msg){const s=document.getElementById('separador');s.innerHTML='<option value="">Erro ao carregar</option>';document.getElementById('btnIniciar').disabled=true;document.getElementById('carregamento').textContent=msg+' Toque aqui para tentar novamente.';document.getElementById('carregamento').style.cursor='pointer';document.getElementById('carregamento').onclick=carregarSeparadores}
 carregarSeparadores();
 function iniciarConferencia(){const s=document.getElementById('separador');if(!s.value){alert('Selecione o seu nome.');return}separador=s.value;document.getElementById('separadorAtual').textContent=separador;document.getElementById('telaInicial').classList.add('oculto');document.getElementById('telaConferencia').classList.remove('oculto');ocultarStatus();carregarQuantidade();iniciarCamera()}
 function carregarQuantidade(){chamarApi({acao:'quantidade',separador:separador},d=>{if(!d||!d.sucesso){mostrarStatus(d&&d.erro?d.erro:'Não foi possível carregar a quantidade.',true);return}contadorAtual=Number(d.quantidade||0);document.getElementById('contador').textContent=contadorAtual},e=>mostrarStatus(e.message,true))}
@@ -25,4 +73,6 @@ function quandoCodigoForLido(codigo){codigo=String(codigo||'').trim();if(!codigo
 function registrarPedido(pedido){processando=true;mostrarStatus('Registrando pedido '+pedido+'...',false);chamarApi({acao:'registrar',pedido:pedido,separador:separador},d=>{if(!d||!d.sucesso){mostrarStatus(d&&d.erro?d.erro:'Não foi possível registrar o pedido.',true);processando=false;return}contadorAtual++;document.getElementById('contador').textContent=contadorAtual;document.getElementById('ultimo').classList.remove('oculto');document.getElementById('ultimoPedido').textContent=d.pedido;mostrarStatus('✓ Pedido '+d.pedido+' registrado!',false);processando=false},e=>{mostrarStatus(e.message,true);processando=false})}
 function finalizarConferencia(){if(scanner){scanner.stop().then(()=>{scanner.clear();voltarInicio()}).catch(()=>voltarInicio())}else voltarInicio()}
 function voltarInicio(){scanner=null;processando=false;ultimoCodigo='';ultimoMomento=0;document.getElementById('reader').innerHTML='';document.getElementById('telaConferencia').classList.add('oculto');document.getElementById('telaInicial').classList.remove('oculto');ocultarStatus()}
-</script></body></html>
+</script>
+</body>
+</html>
