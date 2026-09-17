@@ -4,20 +4,31 @@ const ABA_CADASTRO = 'Cadastro';
 const CHAVE_APP = 'KING-CONFERENCIA-2026';
 
 function doGet(e) {
-  const acao = String((e && e.parameter && e.parameter.acao) || '').trim();
-  const callback = String((e && e.parameter && e.parameter.callback) || '').trim();
+  const parametros = (e && e.parameter) ? e.parameter : {};
+  const acao = String(parametros.acao || '').trim();
+  const callback = String(parametros.callback || '').trim();
   let resultado;
 
   if (!acao) {
     resultado = {
       sucesso: true,
-      mensagem: 'API Controle Profissional funcionando.'
+      mensagem: 'API Controle de Conferência funcionando.'
     };
     return responder_(resultado, callback);
   }
 
-  if (acao === 'separadores') {
+  if (acao === 'separadores' || acao === 'conferentes') {
     resultado = obterSeparadores_(e);
+
+    // Compatibilidade com a versão antiga da aplicação.
+    if (acao === 'conferentes') {
+      resultado = {
+        sucesso: resultado.sucesso,
+        conferentes: resultado.separadores || [],
+        erro: resultado.erro || ''
+      };
+    }
+
     return responder_(resultado, callback);
   }
 
@@ -39,23 +50,32 @@ function doGet(e) {
   return responder_(resultado, callback);
 }
 
+function validarChave_(e) {
+  const parametros = (e && e.parameter) ? e.parameter : {};
+  const chave = String(parametros.chave || '').trim();
+  return chave === CHAVE_APP;
+}
+
 function registrarPedido_(e) {
   try {
-    const chave = String(e.parameter.chave || '').trim();
-
-    if (chave !== CHAVE_APP) {
+    if (!validarChave_(e)) {
       return { sucesso: false, erro: 'Chave inválida.' };
     }
 
-    const pedido = String(e.parameter.pedido || '').trim();
-    const separador = String(e.parameter.separador || '').trim();
+    const parametros = e.parameter || {};
+    const pedido = String(parametros.pedido || '').trim();
+
+    // Aceita os dois nomes para manter compatibilidade com versões antigas.
+    const separador = String(
+      parametros.separador || parametros.conferente || ''
+    ).trim();
 
     if (!pedido) {
       return { sucesso: false, erro: 'Pedido não informado.' };
     }
 
     if (!separador) {
-      return { sucesso: false, erro: 'Separador não informado.' };
+      return { sucesso: false, erro: 'Conferente não informado.' };
     }
 
     const planilha = SpreadsheetApp.getActiveSpreadsheet();
@@ -69,21 +89,29 @@ function registrarPedido_(e) {
     }
 
     const agora = new Date();
-    const data = Utilities.formatDate(agora, Session.getScriptTimeZone(), 'dd/MM/yyyy');
-    const hora = Utilities.formatDate(agora, Session.getScriptTimeZone(), 'HH:mm:ss');
-    const horaAtual = Number(Utilities.formatDate(agora, Session.getScriptTimeZone(), 'HH'));
-    const minutoAtual = Number(Utilities.formatDate(agora, Session.getScriptTimeZone(), 'mm'));
+    const fuso = Session.getScriptTimeZone();
+    const data = Utilities.formatDate(agora, fuso, 'dd/MM/yyyy');
+    const hora = Utilities.formatDate(agora, fuso, 'HH:mm:ss');
+    const horaAtual = Number(Utilities.formatDate(agora, fuso, 'HH'));
+    const minutoAtual = Number(Utilities.formatDate(agora, fuso, 'mm'));
     const minutosDoDia = (horaAtual * 60) + minutoAtual;
     const turno = minutosDoDia <= 720 ? 'Manhã' : 'Tarde';
     const proximaLinha = aba.getLastRow() + 1;
 
-    aba.getRange(proximaLinha, 1, 1, 4).setValues([[data, turno, pedido, separador]]);
+    aba.getRange(proximaLinha, 1, 1, 4).setValues([[
+      data,
+      turno,
+      pedido,
+      separador
+    ]]);
+
     SpreadsheetApp.flush();
 
     return {
       sucesso: true,
       pedido: pedido,
       separador: separador,
+      conferente: separador,
       data: data,
       hora: hora,
       turno: turno
@@ -91,16 +119,14 @@ function registrarPedido_(e) {
   } catch (erro) {
     return {
       sucesso: false,
-      erro: erro.message
+      erro: erro.message || String(erro)
     };
   }
 }
 
 function obterSeparadores_(e) {
   try {
-    const chave = String(e.parameter.chave || '').trim();
-
-    if (chave !== CHAVE_APP) {
+    if (!validarChave_(e)) {
       return { sucesso: false, erro: 'Chave inválida.' };
     }
 
@@ -139,20 +165,22 @@ function obterSeparadores_(e) {
   } catch (erro) {
     return {
       sucesso: false,
-      erro: erro.message
+      erro: erro.message || String(erro)
     };
   }
 }
 
 function quantidadeHoje_(e) {
   try {
-    const chave = String(e.parameter.chave || '').trim();
-
-    if (chave !== CHAVE_APP) {
+    if (!validarChave_(e)) {
       return { sucesso: false, erro: 'Chave inválida.' };
     }
 
-    const separador = String(e.parameter.separador || '').trim();
+    const parametros = e.parameter || {};
+    const separador = String(
+      parametros.separador || parametros.conferente || ''
+    ).trim();
+
     const planilha = SpreadsheetApp.getActiveSpreadsheet();
     const aba = planilha.getSheetByName(ABA_LANCAMENTOS);
 
@@ -161,7 +189,12 @@ function quantidadeHoje_(e) {
     }
 
     const dados = aba.getRange(2, 1, aba.getLastRow() - 1, 4).getValues();
-    const hoje = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy');
+    const hoje = Utilities.formatDate(
+      new Date(),
+      Session.getScriptTimeZone(),
+      'dd/MM/yyyy'
+    );
+
     let quantidade = 0;
 
     dados.forEach(function(linha) {
@@ -180,7 +213,7 @@ function quantidadeHoje_(e) {
   } catch (erro) {
     return {
       sucesso: false,
-      erro: erro.message
+      erro: erro.message || String(erro)
     };
   }
 }
