@@ -1,46 +1,72 @@
 const ID_PLANILHA = '16l4PoccxeI_masCzuQh1vHfJV5z3A-yvz80A2yaubRk';
+
 const ABA_LANCAMENTOS = 'Lançamentos';
 const ABA_CADASTRO = 'Cadastro';
 const CHAVE_APP = 'KING-CONFERENCIA-2026';
 
-/**
- * API do Controle de Conferência.
+/*
+ * LINK SEPARADORES
  *
  * Fluxo:
- * - consulta o pedido já lançado em Lançamentos;
- * - lê o separador da coluna D;
- * - grava somente a conferência na mesma linha;
- * - não altera Data, Turno, Pedido ou Separador.
+ * 1. Os pedidos são pré-lançados na aba "Lançamentos".
+ * 2. O pedido fica na coluna C e o separador na coluna D.
+ * 3. O aplicativo lê o código de barras ou aceita o número digitado.
+ * 4. O Apps Script localiza o pedido ainda não conferido.
+ * 5. O conferente confirma "SIM" ou "NÃO".
+ * 6. O script grava a conferência na mesma linha, sem alterar A:D.
+ *
+ * Estrutura de "Lançamentos":
+ * A Data
+ * B Turno
+ * C Pedido
+ * D Separador
+ * E Conferente
+ * F SKU/Produto
+ * G Qtd. Solicitada
+ * H Qtd. Separada
+ * I Tipo de Erro
+ * J Gravidade
+ * K Erro Detectado?
+ * L Ação Tomada
+ * M Observação
+ * N A separação está correta?
  */
+
 function doGet(e) {
   const p = (e && e.parameter) || {};
   const acao = String(p.acao || '').trim();
   const callback = String(p.callback || '').trim();
 
   try {
-    if (!acao) {
-      return responder_({
-        sucesso: true,
-        mensagem: 'API Controle de Conferência funcionando.'
-      }, callback);
-    }
-
     validarChave_(p);
 
     let resultado;
 
-    if (acao === 'conferentes') {
-      resultado = obterConferentes_();
+    if (!acao) {
+      resultado = {
+        sucesso: true,
+        mensagem: 'API Link Separadores funcionando.',
+        versao: '2.1'
+      };
+    } else if (acao === 'conferentes' || acao === 'separadores') {
+      resultado = obterConferentes_(acao);
     } else if (acao === 'consultarPedido') {
       resultado = consultarPedido_(p.pedido);
     } else if (acao === 'salvarConferencia') {
       resultado = salvarConferencia_(p);
+    } else if (acao === 'registrar') {
+      // Compatibilidade com versões antigas que registravam diretamente.
+      resultado = salvarConferencia_(Object.assign({}, p, {
+        correta: String(p.correta || 'SIM').trim().toUpperCase()
+      }));
     } else if (acao === 'quantidade') {
-      resultado = quantidadeConferencia_(p.conferente);
+      resultado = quantidadeConferencia_(p.conferente || p.separador);
+    } else if (acao === 'diagnostico') {
+      resultado = diagnostico_();
     } else {
       resultado = {
         sucesso: false,
-        erro: 'Ação não reconhecida.'
+        erro: 'Ação não reconhecida: ' + acao
       };
     }
 
@@ -74,73 +100,62 @@ function normalizarCabecalho_(valor) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-/**
- * Localiza a coluna dos conferentes de forma tolerante:
- * 1) procura um cabeçalho com "conferente";
- * 2) se não encontrar, usa a coluna D (layout esperado);
- * 3) se D estiver vazia, tenta a coluna A como compatibilidade.
- */
-function descobrirColunaConferentes_(aba) {
-  const ultimaColuna = Math.max(aba.getLastColumn(), 4);
-  const cabecalhos = aba.getRange(1, 1, 1, ultimaColuna).getDisplayValues()[0];
-
-  for (let i = 0; i < cabecalhos.length; i++) {
-    const cabecalho = normalizarCabecalho_(cabecalhos[i]);
-    if (cabecalho.includes('conferente')) {
-      return i + 1;
-    }
-  }
-
-  const ultimaLinha = aba.getLastRow();
-
-  if (ultimaLinha >= 2) {
-    const valoresD = aba.getRange(2, 4, ultimaLinha - 1, 1)
-      .getDisplayValues()
-      .flat()
-      .map(normalizarTexto_)
-      .filter(Boolean);
-
-    if (valoresD.length) return 4;
-  }
-
-  return 1;
-}
-
-function lerNomesDaColuna_(aba, coluna) {
-  const ultimaLinha = aba.getLastRow();
-
-  if (ultimaLinha < 2) return [];
-
-  return aba.getRange(2, coluna, ultimaLinha - 1, 1)
-    .getDisplayValues()
-    .flat()
-    .map(normalizarTexto_)
-    .filter(Boolean)
-    .filter((nome, indice, lista) => lista.indexOf(nome) === indice);
-}
-
-function obterConferentes_() {
+function obterConferentes_(acao) {
   const aba = planilha_().getSheetByName(ABA_CADASTRO);
 
   if (!aba) {
     throw new Error('A aba "Cadastro" não foi encontrada.');
   }
 
-  const coluna = descobrirColunaConferentes_(aba);
-  const conferentes = lerNomesDaColuna_(aba, coluna);
+  /*
+   * Cadastro atual possui:
+   * A = Separador
+   * D = Conferente
+   *
+   * Usamos A como fonte principal, pois é a coluna que alimenta
+   * os rankings. Também juntamos D para manter compatibilidade
+   * com versões que preenchiam os nomes nela.
+   */
+  const ultimaLinha = aba.getLastRow();
 
-  return {
-    sucesso: true,
-    conferentes: conferentes
-  };
+  if (ultimaLinha < 2) {
+    return acao === 'separadores'
+      ? {sucesso: true, separadores: []}
+      : {sucesso: true, conferentes: []};
+  }
+
+  const ultimaColuna = Math.max(4, aba.getLastColumn());
+  const dados = aba
+    .getRange(2, 1, ultimaLinha - 1, ultimaColuna)
+    .getDisplayValues();
+
+  const nomes = [];
+
+  dados.forEach(linha => {
+    const nomeA = normalizarTexto_(linha[0]);
+    const nomeD = normalizarTexto_(linha[3]);
+
+    if (nomeA) nomes.push(nomeA);
+    if (nomeD) nomes.push(nomeD);
+  });
+
+  const unicos = [...new Set(nomes)];
+
+  return acao === 'separadores'
+    ? {sucesso: true, separadores: unicos}
+    : {sucesso: true, conferentes: unicos};
 }
 
 function conferenteCadastrado_(nome) {
-  const alvo = normalizarTexto_(nome);
+  const alvo = normalizarTexto_(nome).toLowerCase();
+
   if (!alvo) return false;
 
-  const dados = obterConferentes_().conferentes;
-  return dados.some(nomeCadastro => normalizarTexto_(nomeCadastro) === alvo);
+  const lista = obterConferentes_('conferentes').conferentes;
+
+  return lista.some(nomeCadastro =>
+    normalizarTexto_(nomeCadastro).toLowerCase() === alvo
+  );
 }
 
 function normalizarPedido_(valor) {
@@ -148,8 +163,11 @@ function normalizarPedido_(valor) {
 
   if (!texto) return '';
 
-  // Mantém pedidos alfanuméricos intactos.
-  // Para códigos somente numéricos, permite equivalência de zeros à esquerda.
+  /*
+   * Para códigos somente numéricos, ignora zeros à esquerda.
+   * Para códigos alfanuméricos, preserva o conteúdo e normaliza
+   * apenas a capitalização.
+   */
   if (/^\d+$/.test(texto)) {
     return texto.replace(/^0+/, '') || '0';
   }
@@ -157,10 +175,18 @@ function normalizarPedido_(valor) {
   return texto.toUpperCase();
 }
 
-function localizarPedido_(pedido) {
-  const valorBusca = normalizarTexto_(pedido);
+function obterHojeTexto_() {
+  return Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    'dd/MM/yyyy'
+  );
+}
 
-  if (!valorBusca) {
+function localizarPedido_(pedido) {
+  const busca = normalizarTexto_(pedido);
+
+  if (!busca) {
     throw new Error('Número do pedido não informado.');
   }
 
@@ -173,53 +199,84 @@ function localizarPedido_(pedido) {
   const ultimaLinha = aba.getLastRow();
 
   if (ultimaLinha < 2) {
-    throw new Error('Nenhum pedido foi lançado ainda.');
+    return null;
   }
 
-  const dados = aba.getRange(2, 1, ultimaLinha - 1, 14).getDisplayValues();
-  const chaveBusca = normalizarPedido_(valorBusca);
+  const dados = aba
+    .getRange(2, 1, ultimaLinha - 1, 14)
+    .getDisplayValues();
 
-  let primeiroConferido = null;
+  const chaveBusca = normalizarPedido_(busca);
+  const hoje = obterHojeTexto_();
+
+  let primeiroHojeConferido = null;
+  let primeiroAntigo = null;
 
   for (let i = 0; i < dados.length; i++) {
     const linha = dados[i];
+
+    const data = normalizarTexto_(linha[0]);
     const pedidoPlanilha = normalizarTexto_(linha[2]);
 
     if (!pedidoPlanilha) continue;
-    if (normalizarPedido_(pedidoPlanilha) !== chaveBusca) continue;
+
+    if (normalizarPedido_(pedidoPlanilha) !== chaveBusca) {
+      continue;
+    }
 
     const registro = {
       aba: aba,
       linha: i + 2,
+      data: data,
       pedido: pedidoPlanilha,
       separador: normalizarTexto_(linha[3]),
       conferenteAtual: normalizarTexto_(linha[4]),
       resultadoAtual: normalizarTexto_(linha[13])
     };
 
-    registro.conferido = !!registro.conferenteAtual || !!registro.resultadoAtual;
+    registro.conferido =
+      !!registro.conferenteAtual ||
+      registro.resultadoAtual === 'SIM' ||
+      registro.resultadoAtual === 'NÃO';
 
-    // Se houver mais de uma linha para o mesmo pedido, usa a primeira ainda
-    // não conferida. Caso todas já estejam conferidas, retorna uma delas.
-    if (!registro.conferido) {
+    if (data === hoje && !registro.conferido) {
       return registro;
     }
 
-    if (!primeiroConferido) {
-      primeiroConferido = registro;
+    if (data === hoje && registro.conferido && !primeiroHojeConferido) {
+      primeiroHojeConferido = registro;
+    }
+
+    if (data !== hoje && !registro.conferido && !primeiroAntigo) {
+      primeiroAntigo = registro;
     }
   }
 
-  return primeiroConferido;
+  return primeiroHojeConferido || primeiroAntigo || null;
 }
 
 function consultarPedido_(pedido) {
   const registro = localizarPedido_(pedido);
 
   if (!registro) {
-    throw new Error(
-      'Pedido ' + normalizarTexto_(pedido) + ' não encontrado na aba Lançamentos.'
-    );
+    return {
+      sucesso: false,
+      erro: 'Pedido ' + normalizarTexto_(pedido) + ' não encontrado na aba Lançamentos.'
+    };
+  }
+
+  const hoje = obterHojeTexto_();
+
+  if (registro.data !== hoje) {
+    return {
+      sucesso: false,
+      erro:
+        'O pedido ' +
+        registro.pedido +
+        ' foi encontrado, mas a data registrada é ' +
+        registro.data +
+        '.'
+    };
   }
 
   if (registro.conferido) {
@@ -248,13 +305,28 @@ function consultarPedido_(pedido) {
   };
 }
 
+function normalizarQuantidade_(valor) {
+  const texto = normalizarTexto_(valor);
+
+  if (!texto) return '';
+
+  const numero = Number(texto.replace(',', '.'));
+
+  return Number.isFinite(numero) ? numero : texto;
+}
+
 function salvarConferencia_(p) {
   const conferente = normalizarTexto_(p.conferente);
   const pedido = normalizarTexto_(p.pedido);
   const correta = normalizarTexto_(p.correta).toUpperCase();
 
-  if (!conferente) throw new Error('Conferente não informado.');
-  if (!pedido) throw new Error('Pedido não informado.');
+  if (!conferente) {
+    throw new Error('Conferente não informado.');
+  }
+
+  if (!pedido) {
+    throw new Error('Pedido não informado.');
+  }
 
   if (correta !== 'SIM' && correta !== 'NÃO') {
     throw new Error('Resultado da conferência inválido.');
@@ -262,8 +334,26 @@ function salvarConferencia_(p) {
 
   if (!conferenteCadastrado_(conferente)) {
     throw new Error(
-      'Conferente "' + conferente + '" não foi encontrado no Cadastro.'
+      'Conferente "' +
+      conferente +
+      '" não foi encontrado no Cadastro.'
     );
+  }
+
+  const tipoErro = normalizarTexto_(p.tipoErro);
+  const gravidade = normalizarTexto_(p.gravidade);
+  const sku = normalizarTexto_(p.sku);
+  const qtdSolicitada = normalizarQuantidade_(p.qtdSolicitada);
+  const qtdSeparada = normalizarQuantidade_(p.qtdSeparada);
+  const acaoTomada = normalizarTexto_(p.acaoTomada);
+  const observacao = normalizarTexto_(p.observacao);
+
+  if (correta === 'NÃO' && !tipoErro) {
+    throw new Error('Informe o tipo de erro.');
+  }
+
+  if (correta === 'NÃO' && !gravidade) {
+    throw new Error('Informe a gravidade do erro.');
   }
 
   const lock = LockService.getScriptLock();
@@ -273,41 +363,57 @@ function salvarConferencia_(p) {
     const registro = localizarPedido_(pedido);
 
     if (!registro) {
-      throw new Error('Pedido ' + pedido + ' não encontrado.');
+      throw new Error(
+        'Pedido ' +
+        pedido +
+        ' não encontrado na aba Lançamentos.'
+      );
+    }
+
+    if (registro.data !== obterHojeTexto_()) {
+      throw new Error(
+        'O pedido ' +
+        registro.pedido +
+        ' não pertence à data de hoje.'
+      );
     }
 
     if (registro.conferido) {
-      throw new Error('O pedido ' + registro.pedido + ' já foi conferido.');
+      throw new Error(
+        'O pedido ' +
+        registro.pedido +
+        ' já foi conferido.'
+      );
     }
 
     const aba = registro.aba;
     const linha = registro.linha;
 
-    // A:D permanecem intactas.
-    aba.getRange(linha, 5).setValue(conferente); // E Conferente
-    aba.getRange(linha, 11).setValue(correta === 'SIM' ? 'NÃO' : 'SIM'); // K Erro Detectado?
-    aba.getRange(linha, 14).setValue(correta); // N Resultado
+    /*
+     * A:D são dados do pedido e não são alterados.
+     * E:N recebem somente o resultado desta conferência.
+     */
+    const dadosConferencia = [
+      conferente,                         // E
+      correta === 'NÃO' ? sku : '',       // F
+      correta === 'NÃO' ? qtdSolicitada : '', // G
+      correta === 'NÃO' ? qtdSeparada : '',   // H
+      correta === 'NÃO' ? tipoErro : '',  // I
+      correta === 'NÃO' ? gravidade : '', // J
+      correta === 'NÃO' ? 'Sim' : 'Não',  // K
+      correta === 'NÃO' ? acaoTomada : '',// L
+      correta === 'NÃO' ? observacao : '',// M
+      correta                            // N
+    ];
 
-    if (correta === 'NÃO') {
-      aba.getRange(linha, 6, 1, 5).setValues([[
-        normalizarTexto_(p.sku),
-        p.qtdSolicitada === '' ? '' : p.qtdSolicitada,
-        p.qtdSeparada === '' ? '' : p.qtdSeparada,
-        normalizarTexto_(p.tipoErro),
-        normalizarTexto_(p.gravidade)
-      ]]);
-
-      aba.getRange(linha, 12, 1, 2).setValues([[
-        normalizarTexto_(p.acaoTomada),
-        normalizarTexto_(p.observacao)
-      ]]);
-    }
+    aba.getRange(linha, 5, 1, 10).setValues([dadosConferencia]);
 
     SpreadsheetApp.flush();
 
     return {
       sucesso: true,
       pedido: registro.pedido,
+      linha: linha,
       separador: registro.separador,
       conferente: conferente,
       correta: correta
@@ -336,15 +442,21 @@ function quantidadeConferencia_(conferente) {
     };
   }
 
-  const dados = aba.getRange(2, 5, aba.getLastRow() - 1, 10).getDisplayValues();
+  const dados = aba
+    .getRange(2, 1, aba.getLastRow() - 1, 14)
+    .getDisplayValues();
+
+  const hoje = obterHojeTexto_();
   let quantidade = 0;
 
   dados.forEach(linha => {
-    const conferenteLinha = normalizarTexto_(linha[0]);
-    const resultado = normalizarTexto_(linha[9]);
+    const data = normalizarTexto_(linha[0]);
+    const nomeLinha = normalizarTexto_(linha[4]);
+    const resultado = normalizarTexto_(linha[13]);
 
     if (
-      conferenteLinha === nome &&
+      data === hoje &&
+      nomeLinha === nome &&
       (resultado === 'SIM' || resultado === 'NÃO')
     ) {
       quantidade++;
@@ -354,6 +466,23 @@ function quantidadeConferencia_(conferente) {
   return {
     sucesso: true,
     quantidade: quantidade
+  };
+}
+
+function diagnostico_() {
+  const planilha = planilha_();
+  const cadastro = planilha.getSheetByName(ABA_CADASTRO);
+  const lancamentos = planilha.getSheetByName(ABA_LANCAMENTOS);
+
+  return {
+    sucesso: true,
+    versao: '2.1',
+    planilha: planilha.getName(),
+    cadastroExiste: !!cadastro,
+    lancamentosExiste: !!lancamentos,
+    linhasCadastro: cadastro ? cadastro.getLastRow() : 0,
+    linhasLancamentos: lancamentos ? lancamentos.getLastRow() : 0,
+    urlPlanilha: planilha.getUrl()
   };
 }
 
