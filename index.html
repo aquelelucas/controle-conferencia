@@ -3,32 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#0f4f82">
 <title>KING | Link Separadores</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 *{box-sizing:border-box}
+
 :root{
-  --bg:#f3f5f7;
-  --card:#fff;
-  --text:#17202a;
-  --muted:#6b7280;
-  --border:#e2e6eb;
+  --bg:#eef2f5;
+  --card:#ffffff;
+  --text:#18212b;
+  --muted:#697586;
+  --border:#e3e8ee;
   --blue:#1769aa;
   --blue-dark:#0f4f82;
-  --blue-soft:#eef6ff;
-  --green:#16803c;
-  --green-soft:#ecfdf3;
+  --blue-soft:#edf6ff;
+  --green:#147a3a;
+  --green-soft:#edf9f1;
   --red:#b4232a;
+  --red-soft:#fff1f2;
   --yellow:#f4b400;
-  --shadow:0 18px 45px rgba(17,24,39,.10);
+  --shadow:0 18px 45px rgba(18,38,63,.10);
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
 }
 
 body{
-  margin:0;
   min-height:100vh;
-  background:linear-gradient(180deg,#eef2f5 0,#f7f8fa 45%,#eef1f4 100%);
+  background:
+    radial-gradient(circle at top,#f9fbfc 0,#f1f4f7 46%,#e9eef2 100%);
   font-family:Inter,Arial,Helvetica,sans-serif;
   color:var(--text);
 }
@@ -37,15 +44,21 @@ body{
   width:100%;
   max-width:620px;
   margin:auto;
-  padding:22px 16px 32px;
+  padding:18px 14px 28px;
 }
 
 .card{
   background:var(--card);
-  border:1px solid rgba(226,230,235,.95);
-  border-radius:24px;
-  padding:24px;
+  border:1px solid rgba(227,232,238,.95);
+  border-radius:26px;
   box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.header{
+  padding:24px 24px 20px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#ffffff 0,#fbfcfd 100%);
 }
 
 .brand{
@@ -56,8 +69,8 @@ body{
 }
 
 .brand-mark{
-  width:11px;
-  height:11px;
+  width:10px;
+  height:10px;
   border-radius:50%;
   background:var(--yellow);
   box-shadow:0 0 0 5px #fff7d6;
@@ -66,44 +79,48 @@ body{
 .logo{
   font-size:28px;
   line-height:1;
-  font-weight:850;
-  letter-spacing:.07em;
+  font-weight:900;
+  letter-spacing:.075em;
 }
 
 .subtitulo{
   text-align:center;
   color:var(--muted);
-  font-size:14px;
-  margin:8px 0 25px;
+  font-size:13px;
+  margin:8px 0 0;
+}
+
+.content{
+  padding:22px 24px 24px;
 }
 
 .section-title{
   font-size:19px;
-  font-weight:800;
-  margin:0 0 16px;
+  font-weight:850;
+  margin:0 0 15px;
 }
 
-.field-label{
+.field-label,
+.label{
   display:block;
-  font-size:12px;
-  font-weight:800;
-  color:#374151;
-  margin:0 0 7px;
+  color:#586575;
+  font-size:10px;
+  font-weight:850;
   text-transform:uppercase;
-  letter-spacing:.04em;
+  letter-spacing:.09em;
 }
 
 select{
   width:100%;
-  min-height:52px;
+  min-height:54px;
   padding:13px 14px;
-  font-size:16px;
-  color:var(--text);
-  border:1px solid #d1d7de;
-  border-radius:12px;
+  border:1px solid #cfd7e0;
+  border-radius:13px;
   background:#fff;
+  color:var(--text);
+  font:inherit;
+  font-size:16px;
   outline:0;
-  font-family:inherit;
 }
 
 select:focus{
@@ -116,28 +133,43 @@ button{
   min-height:52px;
   padding:14px 16px;
   border:0;
-  border-radius:12px;
+  border-radius:13px;
+  font:inherit;
   font-size:14px;
   font-weight:850;
   letter-spacing:.02em;
   cursor:pointer;
-  transition:transform .12s ease,opacity .12s ease,background .12s ease;
+  transition:transform .12s ease,opacity .12s ease,box-shadow .12s ease;
 }
 
-button:active{transform:scale(.985)}
-button:disabled{opacity:.55;cursor:not-allowed}
+button:active{
+  transform:scale(.985);
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
 
 .btn-primary{
-  margin-top:14px;
+  margin-top:13px;
   color:#fff;
   background:linear-gradient(135deg,var(--blue),var(--blue-dark));
-  box-shadow:0 8px 20px rgba(23,105,170,.20);
+  box-shadow:0 9px 22px rgba(23,105,170,.20);
 }
 
 .btn-danger{
-  margin-top:18px;
+  margin-top:16px;
   color:#fff;
-  background:var(--red);
+  background:#b4232a;
+  box-shadow:0 7px 16px rgba(180,35,42,.12);
+}
+
+.helper{
+  margin-top:10px;
+  text-align:center;
+  color:#98a2af;
+  font-size:11px;
 }
 
 .topbar{
@@ -145,23 +177,17 @@ button:disabled{opacity:.55;cursor:not-allowed}
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 
-.atual{min-width:0}
-
-.label{
-  color:var(--muted);
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:.09em;
-  font-weight:800;
+.atual{
+  min-width:0;
 }
 
 .nome{
   margin-top:4px;
-  font-size:16px;
-  font-weight:800;
+  font-size:17px;
+  font-weight:850;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -170,8 +196,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .badge{
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  padding:7px 10px;
+  gap:7px;
+  padding:8px 11px;
   border-radius:999px;
   background:var(--green-soft);
   color:var(--green);
@@ -191,47 +217,61 @@ button:disabled{opacity:.55;cursor:not-allowed}
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:16px 17px;
+  gap:14px;
+  padding:17px 18px;
   margin-bottom:18px;
+  border:1px solid #d9eafd;
+  border-radius:17px;
   background:var(--blue-soft);
-  border:1px solid #dceeff;
-  border-radius:16px;
 }
 
 .contador-label{
-  color:#4b5563;
+  color:#465362;
   font-size:13px;
-  font-weight:750;
+  font-weight:800;
 }
 
 .contador-sub{
-  margin-top:3px;
-  color:#7b8794;
+  margin-top:4px;
+  color:#7d8895;
   font-size:11px;
 }
 
 .numero{
   color:var(--blue);
-  font-size:32px;
+  font-size:34px;
   line-height:1;
-  font-weight:850;
+  font-weight:900;
+}
+
+.camera-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
 }
 
 .camera-title{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin:0 0 8px;
-  color:#374151;
+  color:#394554;
   font-size:13px;
-  font-weight:800;
+  font-weight:850;
+}
+
+.camera-state{
+  color:var(--green);
+  font-size:10px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.08em;
 }
 
 .camera-wrapper{
+  position:relative;
   overflow:hidden;
-  border-radius:17px;
-  background:#111827;
-  border:1px solid #dbe2e8;
+  border-radius:18px;
+  background:#101820;
+  border:1px solid #d5dde5;
 }
 
 #reader{
@@ -240,7 +280,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 }
 
 #reader video{
-  border-radius:16px;
+  display:block;
+  width:100%!important;
+  border-radius:17px;
 }
 
 .instrucao{
@@ -248,16 +290,16 @@ button:disabled{opacity:.55;cursor:not-allowed}
   color:var(--muted);
   font-size:12px;
   line-height:1.45;
-  margin:10px 8px 0;
+  margin:10px 12px 0;
 }
 
 .status{
   padding:13px 14px;
   margin-top:14px;
-  border-radius:12px;
+  border-radius:13px;
   text-align:center;
-  font-weight:750;
   font-size:13px;
+  font-weight:800;
   line-height:1.4;
 }
 
@@ -267,40 +309,32 @@ button:disabled{opacity:.55;cursor:not-allowed}
 }
 
 .erro{
-  background:#fff1f2;
+  background:var(--red-soft);
   color:var(--red);
-}
-
-.rodape{
-  margin-top:15px;
-  text-align:center;
-  color:#9ca3af;
-  font-size:11px;
-  line-height:1.4;
 }
 
 .ultimo{
   margin-top:12px;
   padding:15px;
-  border-radius:14px;
-  background:#f8fafc;
   border:1px solid var(--border);
+  border-radius:15px;
+  background:#f8fafc;
   text-align:center;
 }
 
 .ultimo-label{
   color:var(--muted);
-  font-size:11px;
-  font-weight:800;
+  font-size:10px;
+  font-weight:850;
   text-transform:uppercase;
-  letter-spacing:.05em;
+  letter-spacing:.08em;
 }
 
 .ultimo-pedido{
-  color:var(--blue);
-  font-size:26px;
-  font-weight:850;
   margin-top:5px;
+  color:var(--blue);
+  font-size:27px;
+  font-weight:900;
   word-break:break-word;
 }
 
@@ -309,9 +343,19 @@ button:disabled{opacity:.55;cursor:not-allowed}
 }
 
 @media(max-width:500px){
-  .container{padding:10px 9px 22px}
-  .card{padding:17px;border-radius:20px}
+  .container{padding:8px 8px 18px}
+  .header{padding:21px 18px 18px}
+  .content{padding:18px 18px 20px}
+  .card{border-radius:21px}
   .logo{font-size:26px}
+  .topbar{align-items:flex-start}
+}
+
+@media(max-width:360px){
+  .content{padding:16px 14px 18px}
+  .header{padding:19px 14px 17px}
+  .badge{font-size:9px;padding:7px 9px}
+  .numero{font-size:31px}
 }
 </style>
 </head>
@@ -320,90 +364,104 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div class="container">
   <div class="card">
 
-    <div class="brand">
-      <span class="brand-mark"></span>
-      <div class="logo">KING</div>
-    </div>
-
-    <div class="subtitulo">Link Separadores</div>
-
-    <section id="telaInicial">
-      <div class="section-title">Entrar na conferência</div>
-
-      <label class="field-label" for="separador">
-        Separador
-      </label>
-
-      <select id="separador">
-        <option value="">Carregando...</option>
-      </select>
-
-      <button
-        id="btnEntrar"
-        class="btn-primary"
-        onclick="entrar()"
-        disabled
-      >
-        ENTRAR
-      </button>
-
-      <div id="carregamento" class="rodape">
-        Carregando separadores...
+    <header class="header">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div class="logo">KING</div>
       </div>
-    </section>
+      <div class="subtitulo">Link Separadores</div>
+    </header>
 
-    <section id="telaConferencia" class="oculto">
+    <main class="content">
 
-      <div class="topbar">
-        <div class="atual">
-          <div class="label">Separador</div>
-          <div id="separadorAtual" class="nome">-</div>
+      <section id="telaInicial">
+        <div class="section-title">Entrar na conferência</div>
+
+        <label class="field-label" for="separador">
+          Separador
+        </label>
+
+        <select id="separador">
+          <option value="">Carregando...</option>
+        </select>
+
+        <button
+          id="btnEntrar"
+          class="btn-primary"
+          onclick="entrar()"
+          disabled
+        >
+          ENTRAR
+        </button>
+
+        <div id="carregamento" class="helper">
+          Carregando separadores...
+        </div>
+      </section>
+
+      <section id="telaConferencia" class="oculto">
+
+        <div class="topbar">
+          <div class="atual">
+            <div class="label">Separador</div>
+            <div id="separadorAtual" class="nome">-</div>
+          </div>
+
+          <div class="badge">
+            <span class="dot"></span>
+            EM CONFERÊNCIA
+          </div>
         </div>
 
-        <div class="badge">
-          <span class="dot"></span>
-          EM CONFERÊNCIA
-        </div>
-      </div>
+        <div class="contador-card">
+          <div>
+            <div class="contador-label">
+              Pedidos registrados
+            </div>
+            <div class="contador-sub">
+              Contagem de hoje
+            </div>
+          </div>
 
-      <div class="contador-card">
-        <div>
-          <div class="contador-label">Pedidos registrados</div>
-          <div class="contador-sub">Contagem de hoje</div>
-        </div>
-        <span id="contador" class="numero">0</span>
-      </div>
-
-      <div class="camera-title">
-        <span>▣</span>
-        Leitura do código de barras
-      </div>
-
-      <div class="camera-wrapper">
-        <div id="reader"></div>
-      </div>
-
-      <div class="instrucao">
-        Aponte a câmera para o código de barras do pedido.
-      </div>
-
-      <div id="status" class="status oculto"></div>
-
-      <div id="ultimo" class="ultimo oculto">
-        <div class="ultimo-label">
-          Último pedido registrado
+          <span id="contador" class="numero">0</span>
         </div>
 
-        <div id="ultimoPedido" class="ultimo-pedido"></div>
-      </div>
+        <div class="camera-head">
+          <div class="camera-title">
+            Leitura do código de barras
+          </div>
+          <div class="camera-state">
+            Câmera ativa
+          </div>
+        </div>
 
-      <button
-        class="btn-danger"
-        onclick="finalizarConferencia()"
-      >
-        FINALIZAR
-      </button>
-    </section>
+        <div class="camera-wrapper">
+          <div id="reader"></div>
+        </div>
+
+        <div class="instrucao">
+          Aponte a câmera para o código de barras do pedido.
+        </div>
+
+        <div id="status" class="status oculto"></div>
+
+        <div id="ultimo" class="ultimo oculto">
+          <div class="ultimo-label">
+            Último pedido registrado
+          </div>
+
+          <div id="ultimoPedido" class="ultimo-pedido"></div>
+        </div>
+
+        <button
+          class="btn-danger"
+          onclick="finalizarConferencia()"
+        >
+          FINALIZAR
+        </button>
+      </section>
+
+    </main>
   </div>
 </div>
 
@@ -418,7 +476,7 @@ let ultimoCodigo='';
 let ultimoMomento=0;
 let contadorAtual=0;
 
-function mostrarStatus(mensagem, erro=false){
+function mostrarStatus(mensagem,erro=false){
   const el=document.getElementById('status');
   el.textContent=mensagem;
   el.className='status '+(erro?'erro':'sucesso');
@@ -440,7 +498,7 @@ function removerScript(callback){
   }catch(e){}
 }
 
-function chamarApi(parametros, sucesso, erro){
+function chamarApi(parametros,sucesso,erro){
   const callback='cb_'+Date.now()+'_'+Math.floor(Math.random()*10000);
   const script=document.createElement('script');
   let terminou=false;
@@ -487,53 +545,62 @@ function chamarApi(parametros, sucesso, erro){
   document.body.appendChild(script);
 }
 
-function carregarSeparadores(){
+function preencherSeparadores(lista){
+  const select=document.getElementById('separador');
+
+  const nomes=[
+    ...new Set(
+      (lista||[])
+        .map(nome=>String(nome||'').trim())
+        .filter(Boolean)
+    )
+  ];
+
+  select.innerHTML=
+    '<option value="">Selecione seu nome</option>';
+
+  nomes.forEach(nome=>{
+    const option=document.createElement('option');
+
+    option.value=nome;
+    option.textContent=nome;
+
+    select.appendChild(option);
+  });
+
+  document.getElementById('btnEntrar').disabled=
+    nomes.length===0;
+
   document.getElementById('carregamento').textContent=
-    'Carregando separadores...';
+    nomes.length
+      ? 'Selecione seu nome e entre.'
+      : 'Nenhum separador cadastrado.';
+}
+
+function carregarSeparadores(){
+  const rodape=document.getElementById('carregamento');
+
+  rodape.textContent='Carregando separadores...';
+  rodape.style.cursor='default';
+  rodape.onclick=null;
 
   chamarApi(
     {acao:'separadores'},
     dados=>{
       if(
-        !dados ||
-        !dados.sucesso ||
-        !Array.isArray(dados.separadores)
+        dados&&
+        dados.sucesso&&
+        Array.isArray(dados.separadores)
       ){
-        mostrarErroInicial(
-          dados&&dados.erro
-            ? dados.erro
-            : 'Não foi possível carregar os separadores.'
-        );
+        preencherSeparadores(dados.separadores);
         return;
       }
 
-      const select=document.getElementById('separador');
-
-      select.innerHTML=
-        '<option value="">Selecione seu nome</option>';
-
-      const nomes=[
-        ...new Set(
-          dados.separadores
-            .map(nome=>String(nome||'').trim())
-            .filter(Boolean)
-        )
-      ];
-
-      nomes.forEach(nome=>{
-        const option=document.createElement('option');
-        option.value=nome;
-        option.textContent=nome;
-        select.appendChild(option);
-      });
-
-      document.getElementById('btnEntrar').disabled=
-        nomes.length===0;
-
-      document.getElementById('carregamento').textContent=
-        nomes.length
-          ? 'Selecione seu nome e entre.'
-          : 'Nenhum separador cadastrado.';
+      mostrarErroInicial(
+        dados&&dados.erro
+          ? dados.erro
+          : 'Não foi possível carregar os separadores.'
+      );
     },
     erro=>{
       mostrarErroInicial(erro.message);
@@ -602,6 +669,7 @@ function carregarQuantidade(){
     dados=>{
       if(dados&&dados.sucesso){
         contadorAtual=Number(dados.quantidade||0);
+
         document.getElementById('contador').textContent=
           contadorAtual;
       }
@@ -637,7 +705,7 @@ function iniciarCamera(){
     fps:10,
     formatsToSupport:formatos,
     qrbox:(w,h)=>{
-      const largura=Math.min(w*.85,350);
+      const largura=Math.min(w*.84,350);
 
       return{
         width:largura,
@@ -667,7 +735,7 @@ function quandoCodigoForLido(codigo){
   const agora=Date.now();
 
   if(
-    codigo===ultimoCodigo &&
+    codigo===ultimoCodigo&&
     agora-ultimoMomento<5000
   ){
     return;
@@ -710,6 +778,7 @@ function registrarPedido(pedido){
       }
 
       contadorAtual++;
+
       document.getElementById('contador').textContent=
         contadorAtual;
 
@@ -724,11 +793,7 @@ function registrarPedido(pedido){
         false
       );
 
-      /*
-       * Não fechamos a câmera.
-       * Depois de registrar, ela fica imediatamente
-       * pronta para o próximo bip.
-       */
+      // A câmera permanece aberta e pronta para o próximo bip.
     },
     erro=>{
       processando=false;
