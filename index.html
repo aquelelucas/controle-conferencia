@@ -52,28 +52,30 @@ button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;
     </div>
 
     <div class="contador-card">
-      <div><div class="contador-label">Pedidos conferidos nesta sessão</div><div class="contador-sub">Sem alterar data ou turno da planilha</div></div>
+      <div><div class="contador-label">Pedidos conferidos nesta sessão</div><div class="contador-sub">Cada pedido confirmado soma 1</div></div>
       <span id="contador" class="numero">0</span>
     </div>
 
-    <div id="areaLeitura">
-      <div class="camera-title"><span>▣</span>Leitura do código de barras</div>
-      <div class="camera-wrapper"><div id="reader"></div></div>
-      <div class="instrucao">Aponte para o código de barras do pedido. Se não houver código, digite o número abaixo.</div>
-      <div class="manual"><input id="pedidoManual" type="text" autocomplete="off" placeholder="Número do pedido"><button class="btn-secondary" onclick="consultarManual()">CONSULTAR</button></div>
+    <div class="camera-title"><span>▣</span>Leitura do código de barras</div>
+    <div class="camera-wrapper"><div id="reader"></div></div>
+    <div class="instrucao">Aponte para o código de barras. Se não houver código, digite o número do pedido.</div>
+
+    <div class="manual">
+      <input id="pedidoManual" type="text" autocomplete="off" placeholder="Número do pedido" inputmode="numeric">
+      <button class="btn-secondary" onclick="usarPedidoManual()">USAR PEDIDO</button>
     </div>
 
     <div id="status" class="status oculto"></div>
 
     <div id="pedidoCard" class="pedido-card oculto">
-      <div class="label">Pedido encontrado</div>
+      <div class="label">Pedido lido</div>
       <div id="pedidoNumero" class="pedido-numero">-</div>
-      <div id="pedidoMeta" class="pedido-meta">Separador: -</div>
+      <div class="pedido-meta">Conferente: <span id="pedidoConferente">-</span></div>
     </div>
 
     <div id="pergunta" class="pergunta oculto">
       <h3>A conferência está correta?</h3>
-      <p>O pedido será atualizado na linha já existente na aba <strong>Lançamentos</strong>.</p>
+      <p>Escolha uma opção para registrar o resultado deste pedido na aba <strong>Lançamentos</strong>.</p>
       <div class="duas-acoes">
         <button id="btnSim" class="btn-yes" onclick="conferenciaCorreta()">SIM, ESTÁ CORRETA</button>
         <button id="btnNao" class="btn-no" onclick="mostrarFormularioErro()">NÃO, TEM ERRO</button>
@@ -87,7 +89,7 @@ button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;
         <div class="campo"><label class="field-label" for="gravidade">Gravidade</label><select id="gravidade"><option value="">Selecione</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select></div>
         <div class="campo"><label class="field-label" for="qtdSolicitada">Qtd. Solicitada</label><input id="qtdSolicitada" inputmode="decimal"></div>
         <div class="campo"><label class="field-label" for="qtdSeparada">Qtd. Separada</label><input id="qtdSeparada" inputmode="decimal"></div>
-        <div class="campo full"><label class="field-label" for="tipoErro">Tipo de Erro</label><input id="tipoErro" autocomplete="off"></div>
+        <div class="campo full"><label class="field-label" for="tipoErro">Tipo de Erro</label><input id="tipoErro" autocomplete="off" placeholder="Ex.: Produto incorreto"></div>
         <div class="campo full"><label class="field-label" for="acaoTomada">Ação Tomada</label><input id="acaoTomada" autocomplete="off"></div>
         <div class="campo full"><label class="field-label" for="observacao">Observação</label><textarea id="observacao"></textarea></div>
       </div>
@@ -107,15 +109,15 @@ const CHAVE='KING-CONFERENCIA-2026';
 let conferente='';
 let scanner=null;
 let processando=false;
-let contadorAtual=0;
-let pedidoAtual=null;
+let pedidoAtual='';
 let ultimoCodigo='';
 let ultimoMomento=0;
+let contadorAtual=0;
 
 function mostrarStatus(msg,tipo='sucesso'){
-  const e=document.getElementById('status');
-  e.textContent=msg;
-  e.className='status '+tipo;
+  const el=document.getElementById('status');
+  el.textContent=msg;
+  el.className='status '+tipo;
 }
 
 function ocultarStatus(){
@@ -130,34 +132,34 @@ function removerScript(nome){
 }
 
 function chamarApi(params,sucesso,erro){
-  const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+  const callback='cb_'+Date.now()+'_'+Math.floor(Math.random()*10000);
   const script=document.createElement('script');
   let terminou=false;
 
-  params={...params,chave:CHAVE,callback:cb};
+  params={...params,chave:CHAVE,callback:callback};
 
-  const finalizarComErro=(mensagem)=>{
+  const finalizarErro=mensagem=>{
     if(terminou)return;
     terminou=true;
     clearTimeout(timer);
-    removerScript(cb);
+    removerScript(callback);
     erro(new Error(mensagem));
   };
 
   const timer=setTimeout(()=>{
-    finalizarComErro('Tempo esgotado ao comunicar com o Google Sheets.');
+    finalizarErro('Tempo esgotado ao comunicar com o Google Sheets.');
   },12000);
 
-  window[cb]=d=>{
+  window[callback]=dados=>{
     if(terminou)return;
     terminou=true;
     clearTimeout(timer);
-    removerScript(cb);
-    sucesso(d);
+    removerScript(callback);
+    sucesso(dados);
   };
 
   script.onerror=()=>{
-    finalizarComErro('Erro de comunicação com o Google Sheets.');
+    finalizarErro('Erro de comunicação com o Google Sheets.');
   };
 
   script.src=URL_API+'?'+new URLSearchParams(params).toString();
@@ -166,55 +168,49 @@ function chamarApi(params,sucesso,erro){
 
 function preencherConferentes(lista){
   const select=document.getElementById('conferente');
+  const nomes=[...new Set((lista||[]).map(n=>String(n||'').trim()).filter(Boolean))];
+
   select.innerHTML='<option value="">Selecione seu nome</option>';
 
-  lista.forEach(nome=>{
-    const texto=String(nome||'').trim();
-    if(!texto)return;
-
+  nomes.forEach(nome=>{
     const option=document.createElement('option');
-    option.value=texto;
-    option.textContent=texto;
+    option.value=nome;
+    option.textContent=nome;
     select.appendChild(option);
   });
 
-  const quantidade=select.options.length-1;
-  const botao=document.getElementById('btnIniciar');
-
-  botao.disabled=quantidade===0;
-
+  document.getElementById('btnIniciar').disabled=nomes.length===0;
   document.getElementById('carregamento').textContent=
-    quantidade
-      ? quantidade+' conferente(s) encontrado(s). Selecione seu nome para começar.'
+    nomes.length
+      ? nomes.length+' conferente(s) encontrado(s).'
       : 'Nenhum conferente encontrado no Cadastro.';
 }
 
 function carregarConferentes(){
   const rodape=document.getElementById('carregamento');
   rodape.textContent='Carregando conferentes...';
+  rodape.onclick=null;
 
   chamarApi(
     {acao:'conferentes'},
-    d=>{
-      if(d&&d.sucesso&&Array.isArray(d.conferentes)){
-        preencherConferentes(d.conferentes);
+    dados=>{
+      if(dados&&dados.sucesso&&Array.isArray(dados.conferentes)){
+        preencherConferentes(dados.conferentes);
         return;
       }
 
-      // Detecta um erro comum: apontar a tela de conferência para a API do projeto
-      // dos separadores.
-      if(d&&Array.isArray(d.separadores)){
-        mostrarErroInicial('A API publicada neste endereço ainda é a do projeto dos separadores.');
+      if(dados&&Array.isArray(dados.separadores)){
+        preencherConferentes(dados.separadores);
         return;
       }
 
       mostrarErroInicial(
-        d&&d.erro
-          ? d.erro
+        dados&&dados.erro
+          ? dados.erro
           : 'A API respondeu, mas não enviou a lista de conferentes.'
       );
     },
-    e=>mostrarErroInicial(e.message)
+    erro=>mostrarErroInicial(erro.message)
   );
 }
 
@@ -240,10 +236,10 @@ function iniciarConferencia(){
 
   conferente=select.value;
   contadorAtual=0;
-  pedidoAtual=null;
-  processando=false;
+  pedidoAtual='';
   ultimoCodigo='';
   ultimoMomento=0;
+  processando=false;
 
   document.getElementById('contador').textContent='0';
   document.getElementById('conferenteAtual').textContent=conferente;
@@ -251,6 +247,7 @@ function iniciarConferencia(){
   document.getElementById('telaConferencia').classList.remove('oculto');
   document.getElementById('pedidoManual').focus();
 
+  limparTelaPedido();
   iniciarCamera();
 }
 
@@ -274,10 +271,7 @@ function iniciarCamera(){
     formatsToSupport:formatos,
     qrbox:(w,h)=>{
       const largura=Math.min(w*.85,350);
-      return{
-        width:largura,
-        height:Math.min(largura,180)
-      };
+      return{width:largura,height:Math.min(largura,180)};
     }
   };
 
@@ -287,95 +281,58 @@ function iniciarCamera(){
     quandoCodigoForLido,
     ()=>{}
   ).catch(()=>{
-    mostrarStatus(
-      'Câmera indisponível. Você ainda pode digitar o pedido manualmente.',
-      'info'
-    );
+    mostrarStatus('Câmera indisponível. Você ainda pode digitar o pedido manualmente.','info');
   });
 }
 
 function quandoCodigoForLido(codigo){
   codigo=String(codigo||'').trim();
-
-  // Não permite que a câmera troque o pedido enquanto o conferente
-  // ainda está respondendo à pergunta atual.
   if(!codigo||processando||pedidoAtual)return;
 
   const agora=Date.now();
-
-  if(codigo===ultimoCodigo&&agora-ultimoMomento<5000)return;
+  if(codigo===ultimoCodigo&&agora-ultimoMomento<4000)return;
 
   ultimoCodigo=codigo;
   ultimoMomento=agora;
-  consultarPedido(codigo);
+  prepararPedido(codigo);
 }
 
-function consultarManual(){
+function usarPedidoManual(){
   const input=document.getElementById('pedidoManual');
-  const valor=input.value.trim();
+  const pedido=input.value.trim();
 
-  if(!valor){
+  if(!pedido){
     input.focus();
     return;
   }
 
   if(processando||pedidoAtual)return;
 
-  consultarPedido(valor);
+  ultimoCodigo=pedido;
+  ultimoMomento=Date.now();
+  prepararPedido(pedido);
 }
 
 document.getElementById('pedidoManual').addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     e.preventDefault();
-    consultarManual();
+    usarPedidoManual();
   }
 });
 
-function consultarPedido(pedido){
+function prepararPedido(pedido){
   if(processando||pedidoAtual)return;
 
-  processando=true;
-  mostrarStatus('Procurando o pedido '+pedido+'...','info');
+  pedidoAtual=String(pedido).trim();
 
-  chamarApi(
-    {acao:'consultarPedido',pedido:pedido},
-    d=>{
-      processando=false;
+  document.getElementById('pedidoNumero').textContent=pedidoAtual;
+  document.getElementById('pedidoConferente').textContent=conferente;
+  document.getElementById('pedidoCard').classList.remove('oculto');
+  document.getElementById('pergunta').classList.remove('oculto');
+  document.getElementById('erroForm').classList.add('oculto');
 
-      if(!d||!d.sucesso){
-        mostrarStatus(
-          d&&d.erro?d.erro:'Pedido não encontrado.',
-          'erro'
-        );
-        document.getElementById('pedidoManual').select();
-        return;
-      }
-
-      pedidoAtual=d;
-
-      document.getElementById('pedidoNumero').textContent=d.pedido;
-      document.getElementById('pedidoMeta').textContent=
-        'Separador: '+(d.separador||'não informado');
-
-      document.getElementById('pedidoCard').classList.remove('oculto');
-      document.getElementById('pergunta').classList.remove('oculto');
-      document.getElementById('erroForm').classList.add('oculto');
-
-      document.getElementById('btnSim').disabled=false;
-      document.getElementById('btnNao').disabled=false;
-
-      mostrarStatus(
-        'Pedido localizado. Confira a separação e escolha uma opção.',
-        'info'
-      );
-
-      document.getElementById('pedidoManual').value='';
-    },
-    e=>{
-      processando=false;
-      mostrarStatus(e.message,'erro');
-    }
-  );
+  mostrarStatus('Pedido '+pedidoAtual+' lido. Confirme o resultado da conferência.','info');
+  document.getElementById('pedidoManual').value='';
 }
 
 function conferenciaCorreta(){
@@ -394,7 +351,13 @@ function mostrarFormularioErro(){
 function salvarComErro(){
   if(!pedidoAtual||processando)return;
 
+  const tipoErro=document.getElementById('tipoErro').value.trim();
   const gravidade=document.getElementById('gravidade').value;
+
+  if(!tipoErro){
+    mostrarStatus('Informe o tipo de erro.','erro');
+    return;
+  }
 
   if(!gravidade){
     mostrarStatus('Informe a gravidade do erro.','erro');
@@ -406,7 +369,7 @@ function salvarComErro(){
     sku:document.getElementById('sku').value.trim(),
     qtdSolicitada:document.getElementById('qtdSolicitada').value.trim(),
     qtdSeparada:document.getElementById('qtdSeparada').value.trim(),
-    tipoErro:document.getElementById('tipoErro').value.trim(),
+    tipoErro:tipoErro,
     gravidade:gravidade,
     acaoTomada:document.getElementById('acaoTomada').value.trim(),
     observacao:document.getElementById('observacao').value.trim()
@@ -417,7 +380,6 @@ function salvarConferencia(dados){
   if(!pedidoAtual||processando)return;
 
   processando=true;
-
   document.getElementById('btnSim').disabled=true;
   document.getElementById('btnNao').disabled=true;
   document.getElementById('btnSalvarErro').disabled=true;
@@ -427,94 +389,91 @@ function salvarConferencia(dados){
   chamarApi(
     {
       acao:'salvarConferencia',
-      pedido:pedidoAtual.pedido,
+      pedido:pedidoAtual,
+      separador:conferente,
       conferente:conferente,
       ...dados
     },
-    d=>{
+    resposta=>{
       processando=false;
 
-      if(!d||!d.sucesso){
-        document.getElementById('btnSim').disabled=false;
-        document.getElementById('btnNao').disabled=false;
-        document.getElementById('btnSalvarErro').disabled=false;
-
+      if(!resposta||!resposta.sucesso){
+        desbloquearBotoes();
         mostrarStatus(
-          d&&d.erro
-            ? d.erro
+          resposta&&resposta.erro
+            ? resposta.erro
             : 'Não foi possível salvar a conferência.',
           'erro'
         );
         return;
       }
 
-      contadorAtual++;
-      document.getElementById('contador').textContent=contadorAtual;
+      if(!resposta.duplicado){
+        contadorAtual++;
+        document.getElementById('contador').textContent=contadorAtual;
+      }
 
       document.getElementById('ultimo').classList.remove('oculto');
-      document.getElementById('ultimoPedido').textContent=d.pedido;
+      document.getElementById('ultimoPedido').textContent=resposta.pedido;
 
       mostrarStatus(
-        '✓ Pedido '+d.pedido+' conferido com sucesso.',
-        'sucesso'
+        resposta.duplicado
+          ? 'Pedido '+resposta.pedido+' já estava registrado para este conferente hoje.'
+          : '✓ Pedido '+resposta.pedido+' conferido e registrado.',
+        resposta.duplicado?'info':'sucesso'
       );
 
-      limparPedidoAtual();
+      limparTelaPedido();
 
       setTimeout(()=>{
         document.getElementById('pedidoManual').focus();
       },80);
     },
-    e=>{
+    erro=>{
       processando=false;
-      document.getElementById('btnSim').disabled=false;
-      document.getElementById('btnNao').disabled=false;
-      document.getElementById('btnSalvarErro').disabled=false;
-      mostrarStatus(e.message,'erro');
+      desbloquearBotoes();
+      mostrarStatus(erro.message,'erro');
     }
   );
 }
 
-function limparPedidoAtual(){
-  pedidoAtual=null;
-
-  document.getElementById('pedidoCard').classList.add('oculto');
-  document.getElementById('pergunta').classList.add('oculto');
-  document.getElementById('erroForm').classList.add('oculto');
-
-  [
-    'sku',
-    'qtdSolicitada',
-    'qtdSeparada',
-    'tipoErro',
-    'acaoTomada',
-    'observacao'
-  ].forEach(id=>{
-    document.getElementById(id).value='';
-  });
-
-  document.getElementById('gravidade').value='';
+function desbloquearBotoes(){
   document.getElementById('btnSim').disabled=false;
   document.getElementById('btnNao').disabled=false;
   document.getElementById('btnSalvarErro').disabled=false;
 }
 
+function limparTelaPedido(){
+  pedidoAtual='';
+
+  document.getElementById('pedidoCard').classList.add('oculto');
+  document.getElementById('pergunta').classList.add('oculto');
+  document.getElementById('erroForm').classList.add('oculto');
+
+  document.getElementById('sku').value='';
+  document.getElementById('qtdSolicitada').value='';
+  document.getElementById('qtdSeparada').value='';
+  document.getElementById('tipoErro').value='';
+  document.getElementById('gravidade').value='';
+  document.getElementById('acaoTomada').value='';
+  document.getElementById('observacao').value='';
+
+  desbloquearBotoes();
+}
+
 function cancelarPedido(){
   if(processando)return;
 
-  limparPedidoAtual();
+  limparTelaPedido();
   ocultarStatus();
-
-  setTimeout(()=>{
-    document.getElementById('pedidoManual').focus();
-  },80);
+  document.getElementById('pedidoManual').focus();
 }
 
 function finalizarConferencia(){
   const concluir=()=>{
     scanner=null;
     processando=false;
-    pedidoAtual=null;
+    pedidoAtual='';
 
     document.getElementById('reader').innerHTML='';
     document.getElementById('telaConferencia').classList.add('oculto');
