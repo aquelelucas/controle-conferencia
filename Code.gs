@@ -3,23 +3,54 @@ const ABA_LANCAMENTOS = 'Lançamentos';
 const ABA_CADASTRO = 'Cadastro';
 const CHAVE_APP = 'KING-CONFERENCIA-2026';
 
+/**
+ * API do Controle de Conferência.
+ *
+ * Fluxo:
+ * - consulta o pedido já lançado em Lançamentos;
+ * - lê o separador da coluna D;
+ * - grava somente a conferência na mesma linha;
+ * - não altera Data, Turno, Pedido ou Separador.
+ */
 function doGet(e) {
   const p = (e && e.parameter) || {};
   const acao = String(p.acao || '').trim();
   const callback = String(p.callback || '').trim();
-  let resultado;
 
   try {
-    if (acao === 'conferentes') resultado = obterConferentes_();
-    else if (acao === 'consultarPedido') resultado = consultarPedido_(p.pedido);
-    else if (acao === 'salvarConferencia') resultado = salvarConferencia_(p);
-    else if (acao === 'quantidade') resultado = quantidadeSessao_(p.conferente);
-    else resultado = { sucesso: true, mensagem: 'API Controle de Conferência funcionando.' };
-  } catch (erro) {
-    resultado = { sucesso: false, erro: erro.message };
-  }
+    if (!acao) {
+      return responder_({
+        sucesso: true,
+        mensagem: 'API Controle de Conferência funcionando.'
+      }, callback);
+    }
 
-  return responder_(resultado, callback);
+    validarChave_(p);
+
+    let resultado;
+
+    if (acao === 'conferentes') {
+      resultado = obterConferentes_();
+    } else if (acao === 'consultarPedido') {
+      resultado = consultarPedido_(p.pedido);
+    } else if (acao === 'salvarConferencia') {
+      resultado = salvarConferencia_(p);
+    } else if (acao === 'quantidade') {
+      resultado = quantidadeConferencia_(p.conferente);
+    } else {
+      resultado = {
+        sucesso: false,
+        erro: 'Ação não reconhecida.'
+      };
+    }
+
+    return responder_(resultado, callback);
+  } catch (erro) {
+    return responder_({
+      sucesso: false,
+      erro: erro && erro.message ? erro.message : String(erro)
+    }, callback);
+  }
 }
 
 function validarChave_(p) {
@@ -32,65 +63,163 @@ function planilha_() {
   return SpreadsheetApp.openById(ID_PLANILHA);
 }
 
+function normalizarTexto_(valor) {
+  return String(valor == null ? '' : valor).trim();
+}
+
+function normalizarCabecalho_(valor) {
+  return normalizarTexto_(valor)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Localiza a coluna dos conferentes de forma tolerante:
+ * 1) procura um cabeçalho com "conferente";
+ * 2) se não encontrar, usa a coluna D (layout esperado);
+ * 3) se D estiver vazia, tenta a coluna A como compatibilidade.
+ */
+function descobrirColunaConferentes_(aba) {
+  const ultimaColuna = Math.max(aba.getLastColumn(), 4);
+  const cabecalhos = aba.getRange(1, 1, 1, ultimaColuna).getDisplayValues()[0];
+
+  for (let i = 0; i < cabecalhos.length; i++) {
+    const cabecalho = normalizarCabecalho_(cabecalhos[i]);
+    if (cabecalho.includes('conferente')) {
+      return i + 1;
+    }
+  }
+
+  const ultimaLinha = aba.getLastRow();
+
+  if (ultimaLinha >= 2) {
+    const valoresD = aba.getRange(2, 4, ultimaLinha - 1, 1)
+      .getDisplayValues()
+      .flat()
+      .map(normalizarTexto_)
+      .filter(Boolean);
+
+    if (valoresD.length) return 4;
+  }
+
+  return 1;
+}
+
+function lerNomesDaColuna_(aba, coluna) {
+  const ultimaLinha = aba.getLastRow();
+
+  if (ultimaLinha < 2) return [];
+
+  return aba.getRange(2, coluna, ultimaLinha - 1, 1)
+    .getDisplayValues()
+    .flat()
+    .map(normalizarTexto_)
+    .filter(Boolean)
+    .filter((nome, indice, lista) => lista.indexOf(nome) === indice);
+}
+
 function obterConferentes_() {
   const aba = planilha_().getSheetByName(ABA_CADASTRO);
-  if (!aba) throw new Error('A aba "Cadastro" não foi encontrada.');
 
-  const ultima = aba.getLastRow();
-  if (ultima < 2) return { sucesso: true, conferentes: [] };
+  if (!aba) {
+    throw new Error('A aba "Cadastro" não foi encontrada.');
+  }
 
-  // No Cadastro, os nomes dos conferentes ficam na coluna A.
-  // Mantemos a leitura a partir da linha 2 para ignorar o cabeçalho.
-  const nomes = aba.getRange(2, 1, ultima - 1, 1).getDisplayValues()
-    .flat()
-    .map(v => String(v).trim())
-    .filter(Boolean);
+  const coluna = descobrirColunaConferentes_(aba);
+  const conferentes = lerNomesDaColuna_(aba, coluna);
 
   return {
     sucesso: true,
-    conferentes: [...new Set(nomes)]
+    conferentes: conferentes
   };
 }
 
+function conferenteCadastrado_(nome) {
+  const alvo = normalizarTexto_(nome);
+  if (!alvo) return false;
+
+  const dados = obterConferentes_().conferentes;
+  return dados.some(nomeCadastro => normalizarTexto_(nomeCadastro) === alvo);
+}
+
+function normalizarPedido_(valor) {
+  const texto = normalizarTexto_(valor);
+
+  if (!texto) return '';
+
+  // Mantém pedidos alfanuméricos intactos.
+  // Para códigos somente numéricos, permite equivalência de zeros à esquerda.
+  if (/^\d+$/.test(texto)) {
+    return texto.replace(/^0+/, '') || '0';
+  }
+
+  return texto.toUpperCase();
+}
+
 function localizarPedido_(pedido) {
-  const valor = String(pedido || '').trim();
-  if (!valor) throw new Error('Número do pedido não informado.');
+  const valorBusca = normalizarTexto_(pedido);
+
+  if (!valorBusca) {
+    throw new Error('Número do pedido não informado.');
+  }
 
   const aba = planilha_().getSheetByName(ABA_LANCAMENTOS);
-  if (!aba) throw new Error('A aba "Lançamentos" não foi encontrada.');
 
-  const ultima = aba.getLastRow();
-  if (ultima < 2) throw new Error('Nenhum pedido foi lançado ainda.');
+  if (!aba) {
+    throw new Error('A aba "Lançamentos" não foi encontrada.');
+  }
 
-  const dados = aba.getRange(2, 1, ultima - 1, 14).getDisplayValues();
+  const ultimaLinha = aba.getLastRow();
+
+  if (ultimaLinha < 2) {
+    throw new Error('Nenhum pedido foi lançado ainda.');
+  }
+
+  const dados = aba.getRange(2, 1, ultimaLinha - 1, 14).getDisplayValues();
+  const chaveBusca = normalizarPedido_(valorBusca);
+
+  let primeiroConferido = null;
 
   for (let i = 0; i < dados.length; i++) {
     const linha = dados[i];
-    const pedidoPlanilha = String(linha[2] || '').trim();
+    const pedidoPlanilha = normalizarTexto_(linha[2]);
 
-    if (pedidoPlanilha !== valor) continue;
+    if (!pedidoPlanilha) continue;
+    if (normalizarPedido_(pedidoPlanilha) !== chaveBusca) continue;
 
-    const conferente = String(linha[4] || '').trim();
-    const resultado = String(linha[13] || '').trim();
-
-    return {
+    const registro = {
       aba: aba,
       linha: i + 2,
       pedido: pedidoPlanilha,
-      separador: String(linha[3] || '').trim(),
-      conferenteAtual: conferente,
-      resultadoAtual: resultado,
-      conferido: !!conferente || !!resultado
+      separador: normalizarTexto_(linha[3]),
+      conferenteAtual: normalizarTexto_(linha[4]),
+      resultadoAtual: normalizarTexto_(linha[13])
     };
+
+    registro.conferido = !!registro.conferenteAtual || !!registro.resultadoAtual;
+
+    // Se houver mais de uma linha para o mesmo pedido, usa a primeira ainda
+    // não conferida. Caso todas já estejam conferidas, retorna uma delas.
+    if (!registro.conferido) {
+      return registro;
+    }
+
+    if (!primeiroConferido) {
+      primeiroConferido = registro;
+    }
   }
 
-  return null;
+  return primeiroConferido;
 }
 
 function consultarPedido_(pedido) {
   const registro = localizarPedido_(pedido);
+
   if (!registro) {
-    throw new Error('Pedido ' + String(pedido || '').trim() + ' não encontrado na aba Lançamentos.');
+    throw new Error(
+      'Pedido ' + normalizarTexto_(pedido) + ' não encontrado na aba Lançamentos.'
+    );
   }
 
   if (registro.conferido) {
@@ -104,7 +233,10 @@ function consultarPedido_(pedido) {
   if (!registro.separador) {
     return {
       sucesso: false,
-      erro: 'O pedido ' + registro.pedido + ' foi encontrado, mas não possui separador informado na coluna D.'
+      erro:
+        'O pedido ' +
+        registro.pedido +
+        ' foi encontrado, mas não possui separador informado na coluna D.'
     };
   }
 
@@ -117,16 +249,21 @@ function consultarPedido_(pedido) {
 }
 
 function salvarConferencia_(p) {
-  validarChave_(p);
-
-  const conferente = String(p.conferente || '').trim();
-  const pedido = String(p.pedido || '').trim();
-  const correta = String(p.correta || '').trim();
+  const conferente = normalizarTexto_(p.conferente);
+  const pedido = normalizarTexto_(p.pedido);
+  const correta = normalizarTexto_(p.correta).toUpperCase();
 
   if (!conferente) throw new Error('Conferente não informado.');
   if (!pedido) throw new Error('Pedido não informado.');
+
   if (correta !== 'SIM' && correta !== 'NÃO') {
     throw new Error('Resultado da conferência inválido.');
+  }
+
+  if (!conferenteCadastrado_(conferente)) {
+    throw new Error(
+      'Conferente "' + conferente + '" não foi encontrado no Cadastro.'
+    );
   }
 
   const lock = LockService.getScriptLock();
@@ -134,33 +271,35 @@ function salvarConferencia_(p) {
 
   try {
     const registro = localizarPedido_(pedido);
-    if (!registro) throw new Error('Pedido ' + pedido + ' não encontrado.');
+
+    if (!registro) {
+      throw new Error('Pedido ' + pedido + ' não encontrado.');
+    }
 
     if (registro.conferido) {
       throw new Error('O pedido ' + registro.pedido + ' já foi conferido.');
     }
 
-    const linha = registro.linha;
     const aba = registro.aba;
+    const linha = registro.linha;
 
-    // Nunca cria nova linha e não altera A:D.
-    // E = Conferente, K = Erro Detectado?, N = resultado da conferência.
-    aba.getRange(linha, 5).setValue(conferente);
-    aba.getRange(linha, 11).setValue(correta === 'SIM' ? 'NÃO' : 'SIM');
-    aba.getRange(linha, 14).setValue(correta);
+    // A:D permanecem intactas.
+    aba.getRange(linha, 5).setValue(conferente); // E Conferente
+    aba.getRange(linha, 11).setValue(correta === 'SIM' ? 'NÃO' : 'SIM'); // K Erro Detectado?
+    aba.getRange(linha, 14).setValue(correta); // N Resultado
 
     if (correta === 'NÃO') {
       aba.getRange(linha, 6, 1, 5).setValues([[
-        String(p.sku || '').trim(),
+        normalizarTexto_(p.sku),
         p.qtdSolicitada === '' ? '' : p.qtdSolicitada,
         p.qtdSeparada === '' ? '' : p.qtdSeparada,
-        String(p.tipoErro || '').trim(),
-        String(p.gravidade || '').trim()
+        normalizarTexto_(p.tipoErro),
+        normalizarTexto_(p.gravidade)
       ]]);
 
       aba.getRange(linha, 12, 1, 2).setValues([[
-        String(p.acaoTomada || '').trim(),
-        String(p.observacao || '').trim()
+        normalizarTexto_(p.acaoTomada),
+        normalizarTexto_(p.observacao)
       ]]);
     }
 
@@ -178,21 +317,31 @@ function salvarConferencia_(p) {
   }
 }
 
-function quantidadeSessao_(conferente) {
-  const nome = String(conferente || '').trim();
-  if (!nome) return { sucesso: true, quantidade: 0 };
+function quantidadeConferencia_(conferente) {
+  const nome = normalizarTexto_(conferente);
+
+  if (!nome) {
+    return {
+      sucesso: true,
+      quantidade: 0
+    };
+  }
 
   const aba = planilha_().getSheetByName(ABA_LANCAMENTOS);
+
   if (!aba || aba.getLastRow() < 2) {
-    return { sucesso: true, quantidade: 0 };
+    return {
+      sucesso: true,
+      quantidade: 0
+    };
   }
 
   const dados = aba.getRange(2, 5, aba.getLastRow() - 1, 10).getDisplayValues();
   let quantidade = 0;
 
   dados.forEach(linha => {
-    const conferenteLinha = String(linha[0] || '').trim();
-    const resultado = String(linha[9] || '').trim();
+    const conferenteLinha = normalizarTexto_(linha[0]);
+    const resultado = normalizarTexto_(linha[9]);
 
     if (
       conferenteLinha === nome &&
@@ -202,13 +351,19 @@ function quantidadeSessao_(conferente) {
     }
   });
 
-  return { sucesso: true, quantidade: quantidade };
+  return {
+    sucesso: true,
+    quantidade: quantidade
+  };
 }
 
 function responder_(objeto, callback) {
   const json = JSON.stringify(objeto);
 
-  if (callback && /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(callback)) {
+  if (
+    callback &&
+    /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(callback)
+  ) {
     return ContentService
       .createTextOutput(callback + '(' + json + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
