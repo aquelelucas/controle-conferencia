@@ -1,3 +1,4 @@
+const ID_PLANILHA = '16l4PoccxeI_masCzuQh1vHfJV5z3A-yvz80A2yaubRk';
 const ABA_LANCAMENTOS = 'Lançamentos';
 const ABA_CADASTRO = 'Cadastro';
 const CHAVE_APP = 'KING-CONFERENCIA-2026';
@@ -14,6 +15,9 @@ const CHAVE_APP = 'KING-CONFERENCIA-2026';
  * 3. A câmera é aberta.
  * 4. O código de barras do pedido é bipado.
  * 5. O sistema registra uma NOVA LINHA em Lançamentos.
+ *
+ * A planilha é aberta pelo ID fixo para que a implantação Web App
+ * sempre aponte para a mesma base, sem depender da planilha ativa.
  *
  * O registro feito pelo Link Separadores é SOMENTE:
  * A = Data
@@ -75,7 +79,7 @@ function doGet(e) {
 }
 
 function obterSeparadores_() {
-  const planilha = SpreadsheetApp.getActiveSpreadsheet();
+  const planilha = SpreadsheetApp.openById(ID_PLANILHA);
   const aba = planilha.getSheetByName(ABA_CADASTRO);
 
   if (!aba) {
@@ -130,7 +134,7 @@ function registrarPedido_(p) {
     };
   }
 
-  const planilha = SpreadsheetApp.getActiveSpreadsheet();
+  const planilha = SpreadsheetApp.openById(ID_PLANILHA);
   const aba = planilha.getSheetByName(ABA_LANCAMENTOS);
 
   if (!aba) {
@@ -154,10 +158,16 @@ function registrarPedido_(p) {
      * Ele não procura pedido existente e não sobrescreve dados.
      */
     const agora = new Date();
+    const partesData = Utilities.formatDate(
+      agora,
+      Session.getScriptTimeZone(),
+      'yyyy,MM,dd'
+    ).split(',');
+
     const data = new Date(
-      agora.getFullYear(),
-      agora.getMonth(),
-      agora.getDate()
+      Number(partesData[0]),
+      Number(partesData[1]) - 1,
+      Number(partesData[2])
     );
 
     const hora = Number(
