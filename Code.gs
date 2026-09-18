@@ -1,7 +1,6 @@
 const ID_PLANILHA = '16l4PoccxeI_masCzuQh1vHfJV5z3A-yvz80A2yaubRk';
 const ABA_LANCAMENTOS = 'Lançamentos';
 const ABA_CADASTRO = 'Cadastro';
-const ABA_USUARIOS = 'USUARIOS_CONFERENCIA';
 const CHAVE_APP = 'KING-CONFERENCIA-2026';
 
 function doGet(e) {
@@ -40,16 +39,20 @@ function obterConferentes_() {
   const ultima = aba.getLastRow();
   if (ultima < 2) return { sucesso: true, conferentes: [] };
 
-  // O conferente fica na coluna D do Cadastro.
-  const nomes = aba.getRange(2, 4, ultima - 1, 1).getDisplayValues()
+  // No Cadastro, os nomes dos conferentes ficam na coluna A.
+  // Mantemos a leitura a partir da linha 2 para ignorar o cabeçalho.
+  const nomes = aba.getRange(2, 1, ultima - 1, 1).getDisplayValues()
     .flat()
     .map(v => String(v).trim())
     .filter(Boolean);
 
-  return { sucesso: true, conferentes: [...new Set(nomes)] };
+  return {
+    sucesso: true,
+    conferentes: [...new Set(nomes)]
+  };
 }
 
-function localizarPedido_(pedido, somenteNaoConferido) {
+function localizarPedido_(pedido) {
   const valor = String(pedido || '').trim();
   if (!valor) throw new Error('Número do pedido não informado.');
 
@@ -67,17 +70,17 @@ function localizarPedido_(pedido, somenteNaoConferido) {
 
     if (pedidoPlanilha !== valor) continue;
 
-    const jaConferido = String(linha[4] || '').trim() || String(linha[13] || '').trim();
-
-    if (somenteNaoConferido && jaConferido) continue;
+    const conferente = String(linha[4] || '').trim();
+    const resultado = String(linha[13] || '').trim();
 
     return {
       aba: aba,
       linha: i + 2,
       pedido: pedidoPlanilha,
       separador: String(linha[3] || '').trim(),
-      conferenteAtual: String(linha[4] || '').trim(),
-      conferido: !!jaConferido
+      conferenteAtual: conferente,
+      resultadoAtual: resultado,
+      conferido: !!conferente || !!resultado
     };
   }
 
@@ -85,8 +88,10 @@ function localizarPedido_(pedido, somenteNaoConferido) {
 }
 
 function consultarPedido_(pedido) {
-  const registro = localizarPedido_(pedido, false);
-  if (!registro) throw new Error('Pedido ' + pedido + ' não encontrado na aba Lançamentos.');
+  const registro = localizarPedido_(pedido);
+  if (!registro) {
+    throw new Error('Pedido ' + String(pedido || '').trim() + ' não encontrado na aba Lançamentos.');
+  }
 
   if (registro.conferido) {
     return {
@@ -128,13 +133,17 @@ function salvarConferencia_(p) {
   lock.waitLock(10000);
 
   try {
-    const registro = localizarPedido_(pedido, false);
+    const registro = localizarPedido_(pedido);
     if (!registro) throw new Error('Pedido ' + pedido + ' não encontrado.');
+
+    if (registro.conferido) {
+      throw new Error('O pedido ' + registro.pedido + ' já foi conferido.');
+    }
 
     const linha = registro.linha;
     const aba = registro.aba;
 
-    // Não cria nova linha e não altera Data, Turno, Pedido ou Separador.
+    // Nunca cria nova linha e não altera A:D.
     // E = Conferente, K = Erro Detectado?, N = resultado da conferência.
     aba.getRange(linha, 5).setValue(conferente);
     aba.getRange(linha, 11).setValue(correta === 'SIM' ? 'NÃO' : 'SIM');
@@ -170,13 +179,13 @@ function salvarConferencia_(p) {
 }
 
 function quantidadeSessao_(conferente) {
-  validarChave_({ chave: CHAVE_APP });
-
   const nome = String(conferente || '').trim();
   if (!nome) return { sucesso: true, quantidade: 0 };
 
   const aba = planilha_().getSheetByName(ABA_LANCAMENTOS);
-  if (!aba || aba.getLastRow() < 2) return { sucesso: true, quantidade: 0 };
+  if (!aba || aba.getLastRow() < 2) {
+    return { sucesso: true, quantidade: 0 };
+  }
 
   const dados = aba.getRange(2, 5, aba.getLastRow() - 1, 10).getDisplayValues();
   let quantidade = 0;
@@ -184,7 +193,13 @@ function quantidadeSessao_(conferente) {
   dados.forEach(linha => {
     const conferenteLinha = String(linha[0] || '').trim();
     const resultado = String(linha[9] || '').trim();
-    if (conferenteLinha === nome && (resultado === 'SIM' || resultado === 'NÃO')) quantidade++;
+
+    if (
+      conferenteLinha === nome &&
+      (resultado === 'SIM' || resultado === 'NÃO')
+    ) {
+      quantidade++;
+    }
   });
 
   return { sucesso: true, quantidade: quantidade };
