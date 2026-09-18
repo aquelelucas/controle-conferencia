@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#111827">
-<title>King | Conferência</title>
+<title>King | Link Separadores</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 <style>
 *{box-sizing:border-box}
@@ -22,12 +22,12 @@ button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;
 .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:10px;font-weight:850;white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:#22a447}
 .contador-card{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;margin-bottom:18px;background:var(--blue-soft);border:1px solid #dceeff;border-radius:16px}.contador-label{color:#4b5563;font-size:13px;font-weight:750}.contador-sub{margin-top:3px;color:#7b8794;font-size:11px}.numero{color:var(--blue);font-size:32px;line-height:1;font-weight:850}
 .camera-title{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#374151;font-size:13px;font-weight:800}.camera-wrapper{overflow:hidden;border-radius:17px;background:#111827;border:1px solid #dbe2e8}#reader{width:100%;overflow:hidden}#reader video{border-radius:16px}
-.instrucao{text-align:center;color:var(--muted);font-size:12px;line-height:1.45;margin:10px 8px 0}.manual{display:flex;gap:8px;margin-top:13px}.manual input{min-width:0}.manual button{width:auto;min-width:112px;margin:0}
+.instrucao{text-align:center;color:var(--muted);font-size:12px;line-height:1.45;margin:10px 8px 0}.manual{display:flex;gap:8px;margin-top:13px}.manual input{min-width:0}.manual button{width:auto;min-width:118px;margin:0}
 .status{padding:13px 14px;margin-top:14px;border-radius:12px;text-align:center;font-weight:750;font-size:13px;line-height:1.4}.sucesso{background:var(--green-soft);color:var(--green)}.erro{background:var(--red-soft);color:var(--red)}.info{background:#f3f4f6;color:#4b5563}
-.ultimo{margin-top:12px;padding:15px;border-radius:14px;background:#f8fafc;border:1px solid var(--border);text-align:center}.ultimo-label{color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.ultimo-pedido{color:var(--blue);font-size:26px;font-weight:850;margin-top:5px;word-break:break-word}
 .pedido-card{margin-top:16px;padding:18px;border:1px solid var(--border);border-radius:17px;background:#fafbfc}.pedido-numero{font-size:28px;font-weight:850;color:var(--blue);word-break:break-word}.pedido-meta{margin-top:5px;color:var(--muted);font-size:13px}
 .pergunta{margin-top:18px;padding:18px;border-radius:17px;background:#f8fafc;border:1px solid var(--border)}.pergunta h3{margin:0 0 6px;font-size:18px}.pergunta p{margin:0 0 15px;color:var(--muted);font-size:13px}.duas-acoes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .erro-form{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.campo{margin-bottom:11px}.full{grid-column:1/-1}
+.ultimo{margin-top:12px;padding:15px;border-radius:14px;background:#f8fafc;border:1px solid var(--border);text-align:center}.ultimo-label{color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.ultimo-pedido{color:var(--blue);font-size:26px;font-weight:850;margin-top:5px;word-break:break-word}
 .rodape{margin-top:15px;text-align:center;color:#9ca3af;font-size:11px;line-height:1.4;cursor:pointer}.oculto{display:none!important}
 @media(max-width:500px){.container{padding:10px 9px 22px}.card{padding:17px;border-radius:20px}.duas-acoes,.grid{grid-template-columns:1fr}.manual button{min-width:105px}.logo{font-size:26px}}
 </style>
@@ -35,7 +35,7 @@ button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;
 <body>
 <div class="container"><div class="card">
   <div class="brand"><span class="brand-mark"></span><div class="logo">KING</div></div>
-  <div class="subtitulo">Controle de Conferência</div>
+  <div class="subtitulo">Link Separadores</div>
 
   <section id="telaInicial">
     <div class="section-title">Iniciar conferência</div>
@@ -52,7 +52,7 @@ button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;
     </div>
 
     <div class="contador-card">
-      <div><div class="contador-label">Pedidos conferidos nesta sessão</div><div class="contador-sub">Cada pedido confirmado soma 1</div></div>
+      <div><div class="contador-label">Pedidos conferidos nesta sessão</div><div class="contador-sub">Conta somente as conferências confirmadas aqui</div></div>
       <span id="contador" class="numero">0</span>
     </div>
 
@@ -61,21 +61,21 @@ button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;
     <div class="instrucao">Aponte para o código de barras. Se não houver código, digite o número do pedido.</div>
 
     <div class="manual">
-      <input id="pedidoManual" type="text" autocomplete="off" placeholder="Número do pedido" inputmode="numeric">
-      <button class="btn-secondary" onclick="usarPedidoManual()">USAR PEDIDO</button>
+      <input id="pedidoManual" type="text" autocomplete="off" placeholder="Número do pedido" inputmode="text">
+      <button class="btn-secondary" onclick="consultarManual()">CONSULTAR</button>
     </div>
 
     <div id="status" class="status oculto"></div>
 
     <div id="pedidoCard" class="pedido-card oculto">
-      <div class="label">Pedido lido</div>
+      <div class="label">Pedido encontrado</div>
       <div id="pedidoNumero" class="pedido-numero">-</div>
-      <div class="pedido-meta">Conferente: <span id="pedidoConferente">-</span></div>
+      <div class="pedido-meta">Separador: <span id="pedidoSeparador">-</span></div>
     </div>
 
     <div id="pergunta" class="pergunta oculto">
       <h3>A conferência está correta?</h3>
-      <p>Escolha uma opção para registrar o resultado deste pedido na aba <strong>Lançamentos</strong>.</p>
+      <p>O pedido será atualizado na mesma linha da aba <strong>Lançamentos</strong>.</p>
       <div class="duas-acoes">
         <button id="btnSim" class="btn-yes" onclick="conferenciaCorreta()">SIM, ESTÁ CORRETA</button>
         <button id="btnNao" class="btn-no" onclick="mostrarFormularioErro()">NÃO, TEM ERRO</button>
@@ -109,10 +109,10 @@ const CHAVE='KING-CONFERENCIA-2026';
 let conferente='';
 let scanner=null;
 let processando=false;
-let pedidoAtual='';
+let pedidoAtual=null;
+let contadorAtual=0;
 let ultimoCodigo='';
 let ultimoMomento=0;
-let contadorAtual=0;
 
 function mostrarStatus(msg,tipo='sucesso'){
   const el=document.getElementById('status');
@@ -125,8 +125,8 @@ function ocultarStatus(){
 }
 
 function removerScript(nome){
-  document.querySelectorAll('script').forEach(s=>{
-    if(s.src&&s.src.includes(nome))s.remove();
+  document.querySelectorAll('script').forEach(script=>{
+    if(script.src&&script.src.includes(nome))script.remove();
   });
   try{delete window[nome]}catch(e){}
 }
@@ -182,7 +182,7 @@ function preencherConferentes(lista){
   document.getElementById('btnIniciar').disabled=nomes.length===0;
   document.getElementById('carregamento').textContent=
     nomes.length
-      ? nomes.length+' conferente(s) encontrado(s).'
+      ? nomes.length+' conferente(s) carregado(s).'
       : 'Nenhum conferente encontrado no Cadastro.';
 }
 
@@ -199,7 +199,7 @@ function carregarConferentes(){
         return;
       }
 
-      if(dados&&Array.isArray(dados.separadores)){
+      if(dados&&dados.sucesso&&Array.isArray(dados.separadores)){
         preencherConferentes(dados.separadores);
         return;
       }
@@ -207,7 +207,7 @@ function carregarConferentes(){
       mostrarErroInicial(
         dados&&dados.erro
           ? dados.erro
-          : 'A API respondeu, mas não enviou a lista de conferentes.'
+          : 'A API respondeu, mas não enviou os nomes.'
       );
     },
     erro=>mostrarErroInicial(erro.message)
@@ -236,23 +236,28 @@ function iniciarConferencia(){
 
   conferente=select.value;
   contadorAtual=0;
-  pedidoAtual='';
+  pedidoAtual=null;
+  processando=false;
   ultimoCodigo='';
   ultimoMomento=0;
-  processando=false;
 
   document.getElementById('contador').textContent='0';
   document.getElementById('conferenteAtual').textContent=conferente;
   document.getElementById('telaInicial').classList.add('oculto');
   document.getElementById('telaConferencia').classList.remove('oculto');
-  document.getElementById('pedidoManual').focus();
 
   limparTelaPedido();
+  document.getElementById('pedidoManual').focus();
   iniciarCamera();
 }
 
 function iniciarCamera(){
   if(scanner)return;
+
+  if(typeof Html5Qrcode==='undefined'){
+    mostrarStatus('Leitor de câmera indisponível. Digite o pedido manualmente.','erro');
+    return;
+  }
 
   scanner=new Html5Qrcode('reader');
 
@@ -263,7 +268,8 @@ function iniciarCamera(){
     Html5QrcodeSupportedFormats.EAN_13,
     Html5QrcodeSupportedFormats.EAN_8,
     Html5QrcodeSupportedFormats.UPC_A,
-    Html5QrcodeSupportedFormats.UPC_E
+    Html5QrcodeSupportedFormats.UPC_E,
+    Html5QrcodeSupportedFormats.QR_CODE
   ];
 
   const config={
@@ -281,23 +287,26 @@ function iniciarCamera(){
     quandoCodigoForLido,
     ()=>{}
   ).catch(()=>{
-    mostrarStatus('Câmera indisponível. Você ainda pode digitar o pedido manualmente.','info');
+    mostrarStatus('Câmera indisponível. Você ainda pode digitar o número do pedido.','info');
   });
 }
 
 function quandoCodigoForLido(codigo){
   codigo=String(codigo||'').trim();
+
   if(!codigo||processando||pedidoAtual)return;
 
   const agora=Date.now();
+
   if(codigo===ultimoCodigo&&agora-ultimoMomento<4000)return;
 
   ultimoCodigo=codigo;
   ultimoMomento=agora;
-  prepararPedido(codigo);
+
+  consultarPedido(codigo);
 }
 
-function usarPedidoManual(){
+function consultarManual(){
   const input=document.getElementById('pedidoManual');
   const pedido=input.value.trim();
 
@@ -310,29 +319,66 @@ function usarPedidoManual(){
 
   ultimoCodigo=pedido;
   ultimoMomento=Date.now();
-  prepararPedido(pedido);
+
+  consultarPedido(pedido);
 }
 
 document.getElementById('pedidoManual').addEventListener('keydown',e=>{
   if(e.key==='Enter'){
     e.preventDefault();
-    usarPedidoManual();
+    consultarManual();
   }
 });
 
-function prepararPedido(pedido){
+function consultarPedido(pedido){
   if(processando||pedidoAtual)return;
 
-  pedidoAtual=String(pedido).trim();
+  processando=true;
+  mostrarStatus('Localizando pedido '+pedido+'...','info');
 
-  document.getElementById('pedidoNumero').textContent=pedidoAtual;
-  document.getElementById('pedidoConferente').textContent=conferente;
-  document.getElementById('pedidoCard').classList.remove('oculto');
-  document.getElementById('pergunta').classList.remove('oculto');
-  document.getElementById('erroForm').classList.add('oculto');
+  chamarApi(
+    {acao:'consultarPedido',pedido:pedido,conferente:conferente},
+    dados=>{
+      processando=false;
 
-  mostrarStatus('Pedido '+pedidoAtual+' lido. Confirme o resultado da conferência.','info');
-  document.getElementById('pedidoManual').value='';
+      if(!dados||!dados.sucesso){
+        mostrarStatus(
+          dados&&dados.erro
+            ? dados.erro
+            : 'Não foi possível localizar o pedido.',
+          'erro'
+        );
+
+        if(dados&&dados.jaConferido){
+          document.getElementById('pedidoManual').select();
+        }
+
+        return;
+      }
+
+      pedidoAtual={
+        pedido:String(dados.pedido||pedido).trim(),
+        linha:dados.linha||null,
+        separador:String(dados.separador||'').trim()
+      };
+
+      document.getElementById('pedidoNumero').textContent=pedidoAtual.pedido;
+      document.getElementById('pedidoSeparador').textContent=pedidoAtual.separador||'-';
+
+      document.getElementById('pedidoCard').classList.remove('oculto');
+      document.getElementById('pergunta').classList.remove('oculto');
+      document.getElementById('erroForm').classList.add('oculto');
+
+      desbloquearBotoes();
+      mostrarStatus('Pedido localizado. Confira a separação e escolha o resultado.','info');
+
+      document.getElementById('pedidoManual').value='';
+    },
+    erro=>{
+      processando=false;
+      mostrarStatus(erro.message,'erro');
+    }
+  );
 }
 
 function conferenciaCorreta(){
@@ -389,8 +435,7 @@ function salvarConferencia(dados){
   chamarApi(
     {
       acao:'salvarConferencia',
-      pedido:pedidoAtual,
-      separador:conferente,
+      pedido:pedidoAtual.pedido,
       conferente:conferente,
       ...dados
     },
@@ -408,19 +453,15 @@ function salvarConferencia(dados){
         return;
       }
 
-      if(!resposta.duplicado){
-        contadorAtual++;
-        document.getElementById('contador').textContent=contadorAtual;
-      }
+      contadorAtual++;
+      document.getElementById('contador').textContent=contadorAtual;
 
       document.getElementById('ultimo').classList.remove('oculto');
       document.getElementById('ultimoPedido').textContent=resposta.pedido;
 
       mostrarStatus(
-        resposta.duplicado
-          ? 'Pedido '+resposta.pedido+' já estava registrado para este conferente hoje.'
-          : '✓ Pedido '+resposta.pedido+' conferido e registrado.',
-        resposta.duplicado?'info':'sucesso'
+        '✓ Pedido '+resposta.pedido+' conferido e registrado.',
+        'sucesso'
       );
 
       limparTelaPedido();
@@ -444,7 +485,7 @@ function desbloquearBotoes(){
 }
 
 function limparTelaPedido(){
-  pedidoAtual='';
+  pedidoAtual=null;
 
   document.getElementById('pedidoCard').classList.add('oculto');
   document.getElementById('pergunta').classList.add('oculto');
@@ -473,7 +514,7 @@ function finalizarConferencia(){
   const concluir=()=>{
     scanner=null;
     processando=false;
-    pedidoAtual='';
+    pedidoAtual=null;
 
     document.getElementById('reader').innerHTML='';
     document.getElementById('telaConferencia').classList.add('oculto');
