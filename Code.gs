@@ -5,17 +5,29 @@ const ABA_CADASTRO = 'Cadastro';
 const CHAVE_APP = 'KING-CONFERENCIA-2026';
 
 /*
+ * ============================================================
  * LINK SEPARADORES
+ * ============================================================
+ *
+ * Este arquivo pertence somente ao fluxo dos SEPARADORES.
  *
  * Fluxo:
- * 1. Os pedidos são pré-lançados na aba "Lançamentos".
- * 2. O pedido fica na coluna C e o separador na coluna D.
- * 3. O aplicativo lê o código de barras ou aceita o número digitado.
- * 4. O Apps Script localiza o pedido ainda não conferido.
- * 5. O conferente confirma "SIM" ou "NÃO".
- * 6. O script grava a conferência na mesma linha, sem alterar A:D.
+ * 1. O separador escolhe o próprio nome na tela inicial.
+ * 2. Entra na conferência.
+ * 3. A câmera lê o código de barras do pedido.
+ * 4. O aplicativo mostra o pedido e pede SIM ou NÃO.
+ * 5. O Apps Script valida o pedido e o separador na aba
+ *    Lançamentos.
+ * 6. O resultado é gravado na MESMA LINHA do pedido.
+ * 7. A câmera permanece aberta e fica pronta para o próximo pedido.
  *
- * Estrutura de "Lançamentos":
+ * Importante:
+ * - A coluna D (Separador) é dado do lançamento e não é alterada.
+ * - A coluna E (Conferente) pertence a outro fluxo e não é alterada.
+ * - O Link Separadores não cadastra pedidos.
+ * - O Link Separadores não preenche formulário de erro.
+ *
+ * Estrutura de Lançamentos:
  * A Data
  * B Turno
  * C Pedido
@@ -38,29 +50,36 @@ function doGet(e) {
   const callback = String(p.callback || '').trim();
 
   try {
+    if (!acao) {
+      return responder_({
+        sucesso: true,
+        mensagem: 'API Link Separadores funcionando.',
+        versao: '3.0'
+      }, callback);
+    }
+
     validarChave_(p);
 
     let resultado;
 
-    if (!acao) {
-      resultado = {
-        sucesso: true,
-        mensagem: 'API Link Separadores funcionando.',
-        versao: '2.1'
-      };
-    } else if (acao === 'conferentes' || acao === 'separadores') {
-      resultado = obterConferentes_(acao);
-    } else if (acao === 'consultarPedido') {
-      resultado = consultarPedido_(p.pedido);
+    if (acao === 'separadores' || acao === 'conferentes') {
+      resultado = obterSeparadores_();
+
+      if (acao === 'conferentes') {
+        // Compatibilidade temporária com versões antigas da interface.
+        resultado = {
+          sucesso: resultado.sucesso,
+          conferentes: resultado.separadores || [],
+          erro: resultado.erro || ''
+        };
+      }
+    } else if (acao === 'registrar') {
+      // Compatibilidade com a primeira versão do Link Separadores.
+      resultado = registrarDireto_(p);
     } else if (acao === 'salvarConferencia') {
       resultado = salvarConferencia_(p);
-    } else if (acao === 'registrar') {
-      // Compatibilidade com versões antigas que registravam diretamente.
-      resultado = salvarConferencia_(Object.assign({}, p, {
-        correta: String(p.correta || 'SIM').trim().toUpperCase()
-      }));
     } else if (acao === 'quantidade') {
-      resultado = quantidadeConferencia_(p.conferente || p.separador);
+      resultado = quantidadeHoje_(p.separador || p.conferente);
     } else if (acao === 'diagnostico') {
       resultado = diagnostico_();
     } else {
@@ -71,6 +90,7 @@ function doGet(e) {
     }
 
     return responder_(resultado, callback);
+
   } catch (erro) {
     return responder_({
       sucesso: false,
@@ -89,85 +109,19 @@ function planilha_() {
   return SpreadsheetApp.openById(ID_PLANILHA);
 }
 
-function normalizarTexto_(valor) {
+function texto_(valor) {
   return String(valor == null ? '' : valor).trim();
 }
 
-function normalizarCabecalho_(valor) {
-  return normalizarTexto_(valor)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function obterConferentes_(acao) {
-  const aba = planilha_().getSheetByName(ABA_CADASTRO);
-
-  if (!aba) {
-    throw new Error('A aba "Cadastro" não foi encontrada.');
-  }
-
-  /*
-   * Cadastro atual possui:
-   * A = Separador
-   * D = Conferente
-   *
-   * Usamos A como fonte principal, pois é a coluna que alimenta
-   * os rankings. Também juntamos D para manter compatibilidade
-   * com versões que preenchiam os nomes nela.
-   */
-  const ultimaLinha = aba.getLastRow();
-
-  if (ultimaLinha < 2) {
-    return acao === 'separadores'
-      ? {sucesso: true, separadores: []}
-      : {sucesso: true, conferentes: []};
-  }
-
-  const ultimaColuna = Math.max(4, aba.getLastColumn());
-  const dados = aba
-    .getRange(2, 1, ultimaLinha - 1, ultimaColuna)
-    .getDisplayValues();
-
-  const nomes = [];
-
-  dados.forEach(linha => {
-    const nomeA = normalizarTexto_(linha[0]);
-    const nomeD = normalizarTexto_(linha[3]);
-
-    if (nomeA) nomes.push(nomeA);
-    if (nomeD) nomes.push(nomeD);
-  });
-
-  const unicos = [...new Set(nomes)];
-
-  return acao === 'separadores'
-    ? {sucesso: true, separadores: unicos}
-    : {sucesso: true, conferentes: unicos};
-}
-
-function conferenteCadastrado_(nome) {
-  const alvo = normalizarTexto_(nome).toLowerCase();
-
-  if (!alvo) return false;
-
-  const lista = obterConferentes_('conferentes').conferentes;
-
-  return lista.some(nomeCadastro =>
-    normalizarTexto_(nomeCadastro).toLowerCase() === alvo
-  );
+function normalizarNome_(valor) {
+  return texto_(valor).toLowerCase();
 }
 
 function normalizarPedido_(valor) {
-  const texto = normalizarTexto_(valor);
+  const texto = texto_(valor);
 
   if (!texto) return '';
 
-  /*
-   * Para códigos somente numéricos, ignora zeros à esquerda.
-   * Para códigos alfanuméricos, preserva o conteúdo e normaliza
-   * apenas a capitalização.
-   */
   if (/^\d+$/.test(texto)) {
     return texto.replace(/^0+/, '') || '0';
   }
@@ -175,20 +129,54 @@ function normalizarPedido_(valor) {
   return texto.toUpperCase();
 }
 
-function obterHojeTexto_() {
-  return Utilities.formatDate(
-    new Date(),
-    Session.getScriptTimeZone(),
-    'dd/MM/yyyy'
-  );
+function obterSeparadores_() {
+  const aba = planilha_().getSheetByName(ABA_CADASTRO);
+
+  if (!aba) {
+    return {
+      sucesso: false,
+      erro: 'A aba "Cadastro" não foi encontrada.'
+    };
+  }
+
+  const ultimaLinha = aba.getLastRow();
+
+  if (ultimaLinha < 2) {
+    return {
+      sucesso: true,
+      separadores: []
+    };
+  }
+
+  // A coluna A é a lista oficial de separadores.
+  const nomes = aba
+    .getRange(2, 1, ultimaLinha - 1, 1)
+    .getDisplayValues()
+    .flat()
+    .map(texto_)
+    .filter(Boolean);
+
+  return {
+    sucesso: true,
+    separadores: [...new Set(nomes)]
+  };
 }
 
-function localizarPedido_(pedido) {
-  const busca = normalizarTexto_(pedido);
+function separadorCadastrado_(nome) {
+  const alvo = normalizarNome_(nome);
 
-  if (!busca) {
-    throw new Error('Número do pedido não informado.');
-  }
+  if (!alvo) return false;
+
+  return obterSeparadores_()
+    .separadores
+    .some(nomeCadastro => normalizarNome_(nomeCadastro) === alvo);
+}
+
+function localizarPedido_(pedido, separador) {
+  const chavePedido = normalizarPedido_(pedido);
+  const chaveSeparador = normalizarNome_(separador);
+
+  if (!chavePedido) return null;
 
   const aba = planilha_().getSheetByName(ABA_LANCAMENTOS);
 
@@ -198,102 +186,124 @@ function localizarPedido_(pedido) {
 
   const ultimaLinha = aba.getLastRow();
 
-  if (ultimaLinha < 2) {
-    return null;
-  }
+  if (ultimaLinha < 2) return null;
 
   const dados = aba
     .getRange(2, 1, ultimaLinha - 1, 14)
     .getDisplayValues();
 
-  const chaveBusca = normalizarPedido_(busca);
-  const hoje = obterHojeTexto_();
-
-  let primeiroHojeConferido = null;
-  let primeiroAntigo = null;
+  let pedidoEncontradoOutroSeparador = null;
+  let pedidoJaConferido = null;
 
   for (let i = 0; i < dados.length; i++) {
     const linha = dados[i];
 
-    const data = normalizarTexto_(linha[0]);
-    const pedidoPlanilha = normalizarTexto_(linha[2]);
+    const pedidoPlanilha = texto_(linha[2]);
 
     if (!pedidoPlanilha) continue;
 
-    if (normalizarPedido_(pedidoPlanilha) !== chaveBusca) {
+    if (normalizarPedido_(pedidoPlanilha) !== chavePedido) {
       continue;
     }
 
     const registro = {
       aba: aba,
       linha: i + 2,
-      data: data,
+      data: texto_(linha[0]),
+      turno: texto_(linha[1]),
       pedido: pedidoPlanilha,
-      separador: normalizarTexto_(linha[3]),
-      conferenteAtual: normalizarTexto_(linha[4]),
-      resultadoAtual: normalizarTexto_(linha[13])
+      separador: texto_(linha[3]),
+      resultado: texto_(linha[13])
     };
 
-    registro.conferido =
-      !!registro.conferenteAtual ||
-      registro.resultadoAtual === 'SIM' ||
-      registro.resultadoAtual === 'NÃO';
+    const mesmoSeparador =
+      normalizarNome_(registro.separador) === chaveSeparador;
 
-    if (data === hoje && !registro.conferido) {
+    const conferido =
+      registro.resultado === 'SIM' ||
+      registro.resultado === 'NÃO';
+
+    if (!mesmoSeparador) {
+      if (!pedidoEncontradoOutroSeparador) {
+        pedidoEncontradoOutroSeparador = registro;
+      }
+      continue;
+    }
+
+    if (!conferido) {
       return registro;
     }
 
-    if (data === hoje && registro.conferido && !primeiroHojeConferido) {
-      primeiroHojeConferido = registro;
-    }
-
-    if (data !== hoje && !registro.conferido && !primeiroAntigo) {
-      primeiroAntigo = registro;
+    if (!pedidoJaConferido) {
+      pedidoJaConferido = registro;
     }
   }
 
-  return primeiroHojeConferido || primeiroAntigo || null;
+  return pedidoJaConferido || pedidoEncontradoOutroSeparador;
 }
 
-function consultarPedido_(pedido) {
-  const registro = localizarPedido_(pedido);
+function consultarPedido_(p) {
+  const separador = texto_(p.separador || p.conferente);
+  const pedido = texto_(p.pedido);
+
+  if (!separador) {
+    return {
+      sucesso: false,
+      erro: 'Separador não informado.'
+    };
+  }
+
+  if (!pedido) {
+    return {
+      sucesso: false,
+      erro: 'Pedido não informado.'
+    };
+  }
+
+  if (!separadorCadastrado_(separador)) {
+    return {
+      sucesso: false,
+      erro: 'Separador "' + separador + '" não está cadastrado.'
+    };
+  }
+
+  const registro = localizarPedido_(pedido, separador);
 
   if (!registro) {
     return {
       sucesso: false,
-      erro: 'Pedido ' + normalizarTexto_(pedido) + ' não encontrado na aba Lançamentos.'
-    };
-  }
-
-  const hoje = obterHojeTexto_();
-
-  if (registro.data !== hoje) {
-    return {
-      sucesso: false,
       erro:
-        'O pedido ' +
-        registro.pedido +
-        ' foi encontrado, mas a data registrada é ' +
-        registro.data +
+        'Pedido ' +
+        pedido +
+        ' não encontrado para o separador ' +
+        separador +
         '.'
     };
   }
 
-  if (registro.conferido) {
-    return {
-      sucesso: false,
-      jaConferido: true,
-      erro: 'O pedido ' + registro.pedido + ' já foi conferido.'
-    };
-  }
-
-  if (!registro.separador) {
+  if (
+    normalizarNome_(registro.separador) !==
+    normalizarNome_(separador)
+  ) {
     return {
       sucesso: false,
       erro:
         'O pedido ' +
         registro.pedido +
-        ' foi encontrado, mas não possui separador informado na coluna D.'
+        ' pertence ao separador "' +
+        registro.separador +
+        '".'
+    };
+  }
+
+  if (registro.resultado === 'SIM' || registro.resultado === 'NÃO') {
+    return {
+      sucesso: false,
+      jaConferido: true,
+      erro:
+        'O pedido ' +
+        registro.pedido +
+        ' já foi conferido.'
     };
   }
 
@@ -305,23 +315,13 @@ function consultarPedido_(pedido) {
   };
 }
 
-function normalizarQuantidade_(valor) {
-  const texto = normalizarTexto_(valor);
-
-  if (!texto) return '';
-
-  const numero = Number(texto.replace(',', '.'));
-
-  return Number.isFinite(numero) ? numero : texto;
-}
-
 function salvarConferencia_(p) {
-  const conferente = normalizarTexto_(p.conferente);
-  const pedido = normalizarTexto_(p.pedido);
-  const correta = normalizarTexto_(p.correta).toUpperCase();
+  const separador = texto_(p.separador || p.conferente);
+  const pedido = texto_(p.pedido);
+  const correta = texto_(p.correta).toUpperCase();
 
-  if (!conferente) {
-    throw new Error('Conferente não informado.');
+  if (!separador) {
+    throw new Error('Separador não informado.');
   }
 
   if (!pedido) {
@@ -329,38 +329,23 @@ function salvarConferencia_(p) {
   }
 
   if (correta !== 'SIM' && correta !== 'NÃO') {
-    throw new Error('Resultado da conferência inválido.');
+    throw new Error('Resposta da conferência inválida.');
   }
 
-  if (!conferenteCadastrado_(conferente)) {
+  if (!separadorCadastrado_(separador)) {
     throw new Error(
-      'Conferente "' +
-      conferente +
-      '" não foi encontrado no Cadastro.'
+      'Separador "' +
+      separador +
+      '" não está cadastrado.'
     );
   }
 
-  const tipoErro = normalizarTexto_(p.tipoErro);
-  const gravidade = normalizarTexto_(p.gravidade);
-  const sku = normalizarTexto_(p.sku);
-  const qtdSolicitada = normalizarQuantidade_(p.qtdSolicitada);
-  const qtdSeparada = normalizarQuantidade_(p.qtdSeparada);
-  const acaoTomada = normalizarTexto_(p.acaoTomada);
-  const observacao = normalizarTexto_(p.observacao);
-
-  if (correta === 'NÃO' && !tipoErro) {
-    throw new Error('Informe o tipo de erro.');
-  }
-
-  if (correta === 'NÃO' && !gravidade) {
-    throw new Error('Informe a gravidade do erro.');
-  }
-
   const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
 
   try {
-    const registro = localizarPedido_(pedido);
+    lock.waitLock(10000);
+
+    const registro = localizarPedido_(pedido, separador);
 
     if (!registro) {
       throw new Error(
@@ -370,61 +355,96 @@ function salvarConferencia_(p) {
       );
     }
 
-    if (registro.data !== obterHojeTexto_()) {
+    if (
+      normalizarNome_(registro.separador) !==
+      normalizarNome_(separador)
+    ) {
       throw new Error(
         'O pedido ' +
         registro.pedido +
-        ' não pertence à data de hoje.'
+        ' pertence ao separador "' +
+        registro.separador +
+        '".'
       );
     }
 
-    if (registro.conferido) {
-      throw new Error(
-        'O pedido ' +
-        registro.pedido +
-        ' já foi conferido.'
-      );
+    if (registro.resultado === 'SIM' || registro.resultado === 'NÃO') {
+      return {
+        sucesso: true,
+        duplicado: true,
+        pedido: registro.pedido,
+        mensagem: 'Pedido já conferido.'
+      };
     }
-
-    const aba = registro.aba;
-    const linha = registro.linha;
 
     /*
-     * A:D são dados do pedido e não são alterados.
-     * E:N recebem somente o resultado desta conferência.
+     * Data e turno:
+     * normalmente já vêm no lançamento.
+     * Se estiverem vazios, o próprio Link Separadores completa
+     * somente esses dois campos para não deixar o registro sem data.
      */
-    const dadosConferencia = [
-      conferente,                         // E
-      correta === 'NÃO' ? sku : '',       // F
-      correta === 'NÃO' ? qtdSolicitada : '', // G
-      correta === 'NÃO' ? qtdSeparada : '',   // H
-      correta === 'NÃO' ? tipoErro : '',  // I
-      correta === 'NÃO' ? gravidade : '', // J
-      correta === 'NÃO' ? 'Sim' : 'Não',  // K
-      correta === 'NÃO' ? acaoTomada : '',// L
-      correta === 'NÃO' ? observacao : '',// M
-      correta                            // N
-    ];
+    const agora = new Date();
 
-    aba.getRange(linha, 5, 1, 10).setValues([dadosConferencia]);
+    if (!registro.data) {
+      registro.aba.getRange(registro.linha, 1).setValue(
+        inicioDoDia_(agora)
+      );
+      registro.aba.getRange(registro.linha, 1).setNumberFormat('dd/MM/yyyy');
+    }
+
+    if (!registro.turno) {
+      registro.aba.getRange(registro.linha, 2).setValue(
+        obterTurno_(agora)
+      );
+    }
+
+    /*
+     * Somente K e N pertencem diretamente à confirmação do separador.
+     *
+     * K = Erro Detectado?
+     * N = A separação está correta?
+     *
+     * Não alteramos:
+     * D = Separador
+     * E = Conferente
+     * F:J e L:M = detalhes de erro/auditoria
+     */
+    registro.aba.getRange(registro.linha, 11)
+      .setValue(correta === 'SIM' ? 'Não' : 'Sim');
+
+    registro.aba.getRange(registro.linha, 14)
+      .setValue(correta);
 
     SpreadsheetApp.flush();
 
     return {
       sucesso: true,
+      duplicado: false,
       pedido: registro.pedido,
-      linha: linha,
       separador: registro.separador,
-      conferente: conferente,
       correta: correta
     };
+
   } finally {
-    lock.releaseLock();
+    try {
+      lock.releaseLock();
+    } catch (erro) {}
   }
 }
 
-function quantidadeConferencia_(conferente) {
-  const nome = normalizarTexto_(conferente);
+function registrarDireto_(p) {
+  /*
+   * Compatibilidade com a versão antiga do frontend.
+   * O novo Link Separadores usa salvarConferencia_ e exige
+   * a confirmação SIM/NÃO antes de gravar.
+   */
+  return salvarConferencia_(Object.assign({}, p, {
+    correta: texto_(p.correta) || 'SIM'
+  }));
+}
+
+function quantidadeHoje_(separador) {
+  const nome = texto_(separador);
 
   if (!nome) {
     return {
@@ -446,17 +466,22 @@ function quantidadeConferencia_(conferente) {
     .getRange(2, 1, aba.getLastRow() - 1, 14)
     .getDisplayValues();
 
-  const hoje = obterHojeTexto_();
+  const hoje = Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    'dd/MM/yyyy'
+  );
+
   let quantidade = 0;
 
   dados.forEach(linha => {
-    const data = normalizarTexto_(linha[0]);
-    const nomeLinha = normalizarTexto_(linha[4]);
-    const resultado = normalizarTexto_(linha[13]);
+    const data = texto_(linha[0]);
+    const separadorLinha = texto_(linha[3]);
+    const resultado = texto_(linha[13]);
 
     if (
       data === hoje &&
-      nomeLinha === nome &&
+      normalizarNome_(separadorLinha) === normalizarNome_(nome) &&
       (resultado === 'SIM' || resultado === 'NÃO')
     ) {
       quantidade++;
@@ -476,14 +501,43 @@ function diagnostico_() {
 
   return {
     sucesso: true,
-    versao: '2.1',
+    versao: '3.0',
     planilha: planilha.getName(),
     cadastroExiste: !!cadastro,
     lancamentosExiste: !!lancamentos,
     linhasCadastro: cadastro ? cadastro.getLastRow() : 0,
     linhasLancamentos: lancamentos ? lancamentos.getLastRow() : 0,
-    urlPlanilha: planilha.getUrl()
+    estruturaLançamentos: 'A:N',
+    listaSeparadores: 'Cadastro!A:A'
   };
+}
+
+function inicioDoDia_(data) {
+  const texto = Utilities.formatDate(
+    data,
+    Session.getScriptTimeZone(),
+    'yyyy,MM,dd'
+  );
+
+  const partes = texto.split(',');
+
+  return new Date(
+    Number(partes[0]),
+    Number(partes[1]) - 1,
+    Number(partes[2])
+  );
+}
+
+function obterTurno_(data) {
+  const hora = Number(
+    Utilities.formatDate(
+      data,
+      Session.getScriptTimeZone(),
+      'HH'
+    )
+  );
+
+  return hora < 12 ? 'Manhã' : 'Tarde';
 }
 
 function responder_(objeto, callback) {
@@ -494,11 +548,17 @@ function responder_(objeto, callback) {
     /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(callback)
   ) {
     return ContentService
-      .createTextOutput(callback + '(' + json + ');')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+      .createTextOutput(
+        callback + '(' + json + ');'
+      )
+      .setMimeType(
+        ContentService.MimeType.JAVASCRIPT
+      );
   }
 
   return ContentService
     .createTextOutput(json)
-    .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(
+      ContentService.MimeType.JSON
+    );
 }
