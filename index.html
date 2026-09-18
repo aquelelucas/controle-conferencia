@@ -386,6 +386,7 @@ function conferenciaCorreta(){
 function mostrarFormularioErro(){
   if(!pedidoAtual||processando)return;
 
+  document.getElementById('pergunta').classList.add('oculto');
   document.getElementById('erroForm').classList.remove('oculto');
   document.getElementById('sku').focus();
 }
