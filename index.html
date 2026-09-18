@@ -4,75 +4,240 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#111827">
-<title>King - Conferência</title>
+<title>King | Conferência</title>
 <script src="https://unpkg.com/html5-qrcode"></script>
 <style>
-*{box-sizing:border-box}:root{--bg:#f4f6f8;--card:#fff;--text:#17202a;--muted:#6b7280;--border:#e5e7eb;--blue:#1769aa;--blue-dark:#0f4f82;--blue-soft:#eef6ff;--green:#16803c;--green-soft:#ecfdf3;--red:#b4232a;--red-soft:#fff1f2;--yellow:#f4b400;--shadow:0 10px 30px rgba(17,24,39,.08)}body{margin:0;min-height:100vh;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}.container{width:100%;max-width:560px;margin:auto;padding:18px 14px 28px}.card{background:#fff;border:1px solid rgba(229,231,235,.9);border-radius:22px;padding:20px;box-shadow:var(--shadow)}.brand{display:flex;align-items:center;justify-content:center;gap:9px}.brand-mark{width:11px;height:11px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px #fff7d6}.logo{font-size:27px;line-height:1;font-weight:800;letter-spacing:.04em}.subtitulo{text-align:center;color:var(--muted);font-size:14px;margin:7px 0 22px}.section-title{font-size:18px;font-weight:700;margin:0 0 14px}.field-label{display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:7px}select{width:100%;min-height:52px;padding:13px 42px 13px 14px;font-size:16px;color:var(--text);border:1px solid #d1d5db;border-radius:12px;background:#fff;outline:0}select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,105,170,.12)}button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;font-size:15px;font-weight:800;letter-spacing:.02em;cursor:pointer;transition:transform .12s ease,opacity .12s ease}button:active{transform:scale(.985)}button:disabled{opacity:.6;cursor:not-allowed}.btn-iniciar{margin-top:14px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue-dark));box-shadow:0 7px 18px rgba(23,105,170,.22)}.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.atual{min-width:0}.label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.nome{margin-top:3px;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.online{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:11px;font-weight:800;white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:#22a447}.contador-card{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;margin-bottom:14px;background:var(--blue-soft);border:1px solid #dceeff;border-radius:15px}.contador-label{color:#4b5563;font-size:13px;font-weight:700}.contador-sub{margin-top:3px;color:#7b8794;font-size:11px}.numero{color:var(--blue);font-size:31px;line-height:1;font-weight:800}.camera-title{display:flex;align-items:center;gap:7px;margin:0 0 8px;color:#374151;font-size:13px;font-weight:700}.camera-wrapper{overflow:hidden;border-radius:16px;background:#111827;border:1px solid #dbe2e8}#reader{width:100%;overflow:hidden}#reader video{border-radius:15px}.instrucao{text-align:center;color:var(--muted);font-size:13px;line-height:1.45;margin:10px 8px 0}.status{padding:13px 14px;margin-top:14px;border-radius:12px;text-align:center;font-weight:700;font-size:14px;line-height:1.35}.sucesso{background:var(--green-soft);color:var(--green)}.erro{background:var(--red-soft);color:var(--red)}.ultimo{margin-top:12px;padding:15px;border-radius:14px;background:#f8fafc;border:1px solid var(--border);text-align:center}.ultimo-label{color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.ultimo-pedido{color:var(--blue);font-size:28px;font-weight:800;margin-top:5px;word-break:break-word}.btn-parar{margin-top:18px;color:#fff;background:var(--red);box-shadow:0 5px 14px rgba(180,35,42,.12)}.rodape{margin-top:15px;text-align:center;color:#9ca3af;font-size:11px}.oculto{display:none!important}@media(max-width:380px){.container{padding:10px 9px 20px}.card{padding:16px;border-radius:18px}.numero{font-size:28px}.nome{max-width:170px}}
+*{box-sizing:border-box}
+:root{
+  --bg:#f3f5f7;--card:#fff;--text:#17202a;--muted:#6b7280;--border:#e2e6eb;
+  --blue:#1769aa;--blue-dark:#0f4f82;--blue-soft:#eef6ff;
+  --green:#16803c;--green-soft:#ecfdf3;--red:#b4232a;--red-soft:#fff1f2;
+  --yellow:#f4b400;--shadow:0 18px 45px rgba(17,24,39,.10)
+}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#eef2f5 0,#f7f8fa 45%,#eef1f4 100%);font-family:Inter,Arial,Helvetica,sans-serif;color:var(--text)}
+.container{width:100%;max-width:680px;margin:auto;padding:22px 16px 32px}
+.card{background:var(--card);border:1px solid rgba(226,230,235,.95);border-radius:24px;padding:24px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;justify-content:center;gap:10px}
+.brand-mark{width:11px;height:11px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 5px #fff7d6}
+.logo{font-size:28px;line-height:1;font-weight:850;letter-spacing:.07em}
+.subtitulo{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 25px}
+.section-title{font-size:19px;font-weight:800;margin:0 0 16px}
+.field-label{display:block;font-size:12px;font-weight:800;color:#374151;margin:0 0 7px;text-transform:uppercase;letter-spacing:.04em}
+select,input,textarea{width:100%;min-height:52px;padding:13px 14px;font-size:16px;color:var(--text);border:1px solid #d1d7de;border-radius:12px;background:#fff;outline:0;font-family:inherit}
+textarea{min-height:90px;resize:vertical}
+select:focus,input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,105,170,.12)}
+button{width:100%;min-height:52px;padding:14px 16px;border:0;border-radius:12px;font-size:14px;font-weight:850;letter-spacing:.02em;cursor:pointer;transition:transform .12s ease,opacity .12s ease,background .12s ease}
+button:active{transform:scale(.985)}button:disabled{opacity:.55;cursor:not-allowed}
+.btn-primary{margin-top:14px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue-dark));box-shadow:0 8px 20px rgba(23,105,170,.20)}
+.btn-secondary{color:#374151;background:#f3f4f6;border:1px solid #e1e5e9}
+.btn-yes{color:#fff;background:linear-gradient(135deg,#198754,#126b43)}
+.btn-no{color:#fff;background:linear-gradient(135deg,#c52d35,#9f1d25)}
+.btn-danger{margin-top:18px;color:#fff;background:#b4232a}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.atual{min-width:0}.label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:800}
+.nome{margin-top:4px;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:10px;font-weight:850;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:#22a447}
+.contador-card{display:flex;align-items:center;justify-content:space-between;padding:16px 17px;margin-bottom:18px;background:var(--blue-soft);border:1px solid #dceeff;border-radius:16px}
+.contador-label{color:#4b5563;font-size:13px;font-weight:750}.contador-sub{margin-top:3px;color:#7b8794;font-size:11px}.numero{color:var(--blue);font-size:32px;line-height:1;font-weight:850}
+.camera-title{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#374151;font-size:13px;font-weight:800}
+.camera-wrapper{overflow:hidden;border-radius:17px;background:#111827;border:1px solid #dbe2e8}
+#reader{width:100%;overflow:hidden}#reader video{border-radius:16px}
+.instrucao{text-align:center;color:var(--muted);font-size:12px;line-height:1.45;margin:10px 8px 0}
+.manual{display:flex;gap:8px;margin-top:13px}.manual input{min-width:0}.manual button{width:auto;min-width:112px;margin:0}
+.status{padding:13px 14px;margin-top:14px;border-radius:12px;text-align:center;font-weight:750;font-size:13px;line-height:1.4}
+.sucesso{background:var(--green-soft);color:var(--green)}.erro{background:var(--red-soft);color:var(--red)}.info{background:#f3f4f6;color:#4b5563}
+.ultimo{margin-top:12px;padding:15px;border-radius:14px;background:#f8fafc;border:1px solid var(--border);text-align:center}
+.ultimo-label{color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.ultimo-pedido{color:var(--blue);font-size:26px;font-weight:850;margin-top:5px;word-break:break-word}
+.pedido-card{margin-top:16px;padding:18px;border:1px solid var(--border);border-radius:17px;background:#fafbfc}
+.pedido-numero{font-size:28px;font-weight:850;color:var(--blue);word-break:break-word}.pedido-meta{margin-top:5px;color:var(--muted);font-size:13px}
+.pergunta{margin-top:18px;padding:18px;border-radius:17px;background:#f8fafc;border:1px solid var(--border)}
+.pergunta h3{margin:0 0 6px;font-size:18px}.pergunta p{margin:0 0 15px;color:var(--muted);font-size:13px}
+.duas-acoes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.erro-form{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.campo{margin-bottom:11px}.full{grid-column:1/-1}
+.rodape{margin-top:15px;text-align:center;color:#9ca3af;font-size:11px;line-height:1.4}.oculto{display:none!important}
+@media(max-width:500px){.container{padding:10px 9px 22px}.card{padding:17px;border-radius:20px}.duas-acoes,.grid{grid-template-columns:1fr}.manual button{min-width:105px}.logo{font-size:26px}}
 </style>
 </head>
 <body>
 <div class="container"><div class="card">
-<div class="brand"><span class="brand-mark"></span><div class="logo">KING</div></div>
-<div class="subtitulo">Controle de Conferência</div>
-<div id="telaInicial">
-<div class="section-title">Iniciar conferência</div>
-<label class="field-label" for="separador">Separador</label>
-<select id="separador"><option value="">Carregando...</option></select>
-<button id="btnIniciar" class="btn-iniciar" onclick="iniciarConferencia()" disabled>INICIAR CONFERÊNCIA</button>
-<div id="carregamento" class="rodape">Carregando separadores...</div>
-</div>
-<div id="telaConferencia" class="oculto">
-<div class="topbar"><div class="atual"><div class="label">Separador</div><div id="separadorAtual" class="nome">-</div></div><div class="online"><span class="dot"></span>EM CONFERÊNCIA</div></div>
-<div class="contador-card"><div><div class="contador-label">Pedidos conferidos</div><div class="contador-sub">Contagem de hoje</div></div><span id="contador" class="numero">0</span></div>
-<div class="camera-title"><span>▣</span>Leitura do código de barras</div>
-<div class="camera-wrapper"><div id="reader"></div></div>
-<div class="instrucao">Aponte a câmera para o código de barras do pedido.</div>
-<div id="status" class="status oculto"></div>
-<div id="ultimo" class="ultimo oculto"><div class="ultimo-label">Último pedido registrado</div><div id="ultimoPedido" class="ultimo-pedido"></div></div>
-<button class="btn-parar" onclick="finalizarConferencia()">FINALIZAR CONFERÊNCIA</button>
-</div>
+  <div class="brand"><span class="brand-mark"></span><div class="logo">KING</div></div>
+  <div class="subtitulo">Controle de Conferência</div>
+
+  <section id="telaInicial">
+    <div class="section-title">Iniciar conferência</div>
+    <label class="field-label" for="conferente">Conferente</label>
+    <select id="conferente"><option value="">Carregando...</option></select>
+    <button id="btnIniciar" class="btn-primary" onclick="iniciarConferencia()" disabled>INICIAR CONFERÊNCIA</button>
+    <div id="carregamento" class="rodape">Carregando conferentes...</div>
+  </section>
+
+  <section id="telaConferencia" class="oculto">
+    <div class="topbar">
+      <div class="atual"><div class="label">Conferente</div><div id="conferenteAtual" class="nome">-</div></div>
+      <div class="badge"><span class="dot"></span>EM CONFERÊNCIA</div>
+    </div>
+
+    <div class="contador-card">
+      <div><div class="contador-label">Pedidos conferidos nesta sessão</div><div class="contador-sub">Sem alterar data ou turno da planilha</div></div>
+      <span id="contador" class="numero">0</span>
+    </div>
+
+    <div id="areaLeitura">
+      <div class="camera-title"><span>▣</span>Leitura do código de barras</div>
+      <div class="camera-wrapper"><div id="reader"></div></div>
+      <div class="instrucao">Aponte para o código de barras do pedido. Se não houver código, digite o número abaixo.</div>
+      <div class="manual"><input id="pedidoManual" inputmode="numeric" autocomplete="off" placeholder="Número do pedido"><button class="btn-secondary" onclick="consultarManual()">CONSULTAR</button></div>
+    </div>
+
+    <div id="status" class="status oculto"></div>
+
+    <div id="pedidoCard" class="pedido-card oculto">
+      <div class="label">Pedido encontrado</div>
+      <div id="pedidoNumero" class="pedido-numero">-</div>
+      <div id="pedidoMeta" class="pedido-meta">Separador: -</div>
+    </div>
+
+    <div id="pergunta" class="pergunta oculto">
+      <h3>A conferência está correta?</h3>
+      <p>O pedido será atualizado na linha já existente na aba <strong>Lançamentos</strong>.</p>
+      <div class="duas-acoes">
+        <button class="btn-yes" onclick="conferenciaCorreta()">SIM, ESTÁ CORRETA</button>
+        <button class="btn-no" onclick="mostrarFormularioErro()">NÃO, TEM ERRO</button>
+      </div>
+    </div>
+
+    <div id="erroForm" class="erro-form oculto">
+      <div class="section-title">Detalhar erro</div>
+      <div class="grid">
+        <div class="campo"><label class="field-label" for="sku">SKU/Produto</label><input id="sku" autocomplete="off"></div>
+        <div class="campo"><label class="field-label" for="gravidade">Gravidade</label><select id="gravidade"><option value="">Selecione</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select></div>
+        <div class="campo"><label class="field-label" for="qtdSolicitada">Qtd. Solicitada</label><input id="qtdSolicitada" inputmode="decimal"></div>
+        <div class="campo"><label class="field-label" for="qtdSeparada">Qtd. Separada</label><input id="qtdSeparada" inputmode="decimal"></div>
+        <div class="campo full"><label class="field-label" for="tipoErro">Tipo de Erro</label><input id="tipoErro" autocomplete="off"></div>
+        <div class="campo full"><label class="field-label" for="acaoTomada">Ação Tomada</label><input id="acaoTomada" autocomplete="off"></div>
+        <div class="campo full"><label class="field-label" for="observacao">Observação</label><textarea id="observacao"></textarea></div>
+      </div>
+      <button class="btn-no" onclick="salvarComErro()">SALVAR CONFERÊNCIA COM ERRO</button>
+      <button class="btn-secondary" style="margin-top:8px" onclick="cancelarPedido()">CANCELAR</button>
+    </div>
+
+    <div id="ultimo" class="ultimo oculto"><div class="ultimo-label">Último pedido conferido</div><div id="ultimoPedido" class="ultimo-pedido"></div></div>
+    <button class="btn-danger" onclick="finalizarConferencia()">FINALIZAR CONFERÊNCIA</button>
+  </section>
 </div></div>
+
 <script>
 const URL_API='https://script.google.com/macros/s/AKfycbw35QaB2JHTZWeZOWP1QtRJSBa9lLt29JvJi23P4yfqjx0tav2innM_LkmpEy2OCaBu/exec';
 const CHAVE='KING-CONFERENCIA-2026';
-let separador='',scanner=null,processando=false,ultimoCodigo='',ultimoMomento=0,contadorAtual=0;
-function mostrarStatus(msg,erro){const e=document.getElementById('status');e.textContent=msg;e.className='status '+(erro?'erro':'sucesso')}
+let conferente='',scanner=null,processando=false,contadorAtual=0,pedidoAtual=null;
+
+function mostrarStatus(msg,tipo='sucesso'){const e=document.getElementById('status');e.textContent=msg;e.className='status '+tipo}
 function ocultarStatus(){document.getElementById('status').className='status oculto'}
 function removerScript(nome){document.querySelectorAll('script').forEach(s=>{if(s.src&&s.src.includes(nome))s.remove()});try{delete window[nome]}catch(e){}}
-function chamarApi(params,sucesso,erro){const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*10000),script=document.createElement('script');let terminou=false;params={...params,chave:CHAVE,callback:cb};const timer=setTimeout(()=>{if(terminou)return;terminou=true;removerScript(cb);erro(new Error('Tempo esgotado ao comunicar com o Google Sheets.'))},12000);window[cb]=d=>{if(terminou)return;terminou=true;clearTimeout(timer);removerScript(cb);sucesso(d)};script.onerror=()=>{if(terminou)return;terminou=true;clearTimeout(timer);removerScript(cb);erro(new Error('Erro de comunicação com o Google Sheets.'))};script.src=URL_API+'?'+new URLSearchParams(params).toString();document.body.appendChild(script)}
-function preencherSeparadores(lista){const s=document.getElementById('separador');s.innerHTML='<option value="">Selecione seu nome</option>';lista.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o)});document.getElementById('btnIniciar').disabled=lista.length===0;document.getElementById('carregamento').textContent=lista.length?'Selecione seu nome para começar':'Nenhum separador cadastrado'}
-function carregarSeparadores(){
-  document.getElementById('carregamento').textContent='Carregando separadores...';
-  chamarApi({acao:'separadores'},d=>{
-    try{
-      if(d&&d.sucesso&&Array.isArray(d.separadores)){preencherSeparadores(d.separadores);return}
-      throw new Error(d&&d.erro?d.erro:'Resposta inválida para separadores.');
-    }catch(e){
-      chamarApi({acao:'conferentes'},d2=>{
-        try{
-          if(d2&&d2.sucesso&&Array.isArray(d2.conferentes)){preencherSeparadores(d2.conferentes);return}
-          throw new Error(d2&&d2.erro?d2.erro:'Resposta inválida.');
-        }catch(e2){mostrarErroInicial(e2.message)}
-      },mostrarErroInicial)
-    }
-  },()=>{
-    chamarApi({acao:'conferentes'},d=>{
-      try{
-        if(d&&d.sucesso&&Array.isArray(d.conferentes)){preencherSeparadores(d.conferentes);return}
-        throw new Error(d&&d.erro?d.erro:'Não foi possível carregar os nomes.');
-      }catch(e){mostrarErroInicial(e.message)}
-    },mostrarErroInicial)
+function chamarApi(params,sucesso,erro){
+  const cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*10000),script=document.createElement('script');let terminou=false;
+  params={...params,chave:CHAVE,callback:cb};
+  const timer=setTimeout(()=>{if(terminou)return;terminou=true;removerScript(cb);erro(new Error('Tempo esgotado ao comunicar com o Google Sheets.'))},12000);
+  window[cb]=d=>{if(terminou)return;terminou=true;clearTimeout(timer);removerScript(cb);sucesso(d)};
+  script.onerror=()=>{if(terminou)return;terminou=true;clearTimeout(timer);removerScript(cb);erro(new Error('Erro de comunicação com o Google Sheets.'))};
+  script.src=URL_API+'?'+new URLSearchParams(params).toString();document.body.appendChild(script);
+}
+function preencherConferentes(lista){
+  const s=document.getElementById('conferente');s.innerHTML='<option value="">Selecione seu nome</option>';
+  lista.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o)});
+  document.getElementById('btnIniciar').disabled=lista.length===0;
+  document.getElementById('carregamento').textContent=lista.length?'Selecione seu nome para começar':'Nenhum conferente cadastrado';
+}
+function carregarConferentes(){
+  chamarApi({acao:'conferentes'},d=>{
+    if(d&&d.sucesso&&Array.isArray(d.conferentes)){preencherConferentes(d.conferentes);return}
+    mostrarErroInicial(d&&d.erro?d.erro:'Não foi possível carregar os conferentes.')
+  },e=>mostrarErroInicial(e.message));
+}
+function mostrarErroInicial(msg){
+  const s=document.getElementById('conferente');s.innerHTML='<option value="">Erro ao carregar</option>';
+  document.getElementById('btnIniciar').disabled=true;
+  document.getElementById('carregamento').textContent=msg+' Clique aqui para tentar novamente.';
+  document.getElementById('carregamento').style.cursor='pointer';document.getElementById('carregamento').onclick=carregarConferentes;
+}
+carregarConferentes();
+
+function iniciarConferencia(){
+  const s=document.getElementById('conferente');if(!s.value){alert('Selecione seu nome.');return}
+  conferente=s.value;document.getElementById('conferenteAtual').textContent=conferente;
+  document.getElementById('telaInicial').classList.add('oculto');document.getElementById('telaConferencia').classList.remove('oculto');
+  iniciarCamera();document.getElementById('pedidoManual').focus();
+}
+function iniciarCamera(){
+  scanner=new Html5Qrcode('reader');
+  const formatos=[Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.CODE_93,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E];
+  const config={fps:10,formatsToSupport:formatos,qrbox:(w,h)=>{const t=Math.min(w*.85,350);return{width:t,height:Math.min(t,180)}}};
+  scanner.start({facingMode:'environment'},config,quandoCodigoForLido,()=>{}).catch(()=>mostrarStatus('Câmera indisponível. Você ainda pode digitar o pedido manualmente.','info'));
+}
+function quandoCodigoForLido(codigo){codigo=String(codigo||'').trim();if(!codigo||processando)return;consultarPedido(codigo)}
+function consultarManual(){const v=document.getElementById('pedidoManual').value.trim();if(!v){document.getElementById('pedidoManual').focus();return}consultarPedido(v)}
+document.getElementById('pedidoManual').addEventListener('keydown',e=>{if(e.key==='Enter')consultarManual()});
+
+function consultarPedido(pedido){
+  if(processando)return;processando=true;mostrarStatus('Procurando o pedido '+pedido+'...','info');
+  chamarApi({acao:'consultarPedido',pedido:pedido},d=>{
+    processando=false;
+    if(!d||!d.sucesso){mostrarStatus(d&&d.erro?d.erro:'Pedido não encontrado.', 'erro');document.getElementById('pedidoManual').select();return}
+    pedidoAtual=d;
+    document.getElementById('pedidoNumero').textContent=d.pedido;
+    document.getElementById('pedidoMeta').textContent='Separador: '+(d.separador||'não informado');
+    document.getElementById('pedidoCard').classList.remove('oculto');
+    document.getElementById('pergunta').classList.remove('oculto');
+    document.getElementById('erroForm').classList.add('oculto');
+    mostrarStatus('Pedido localizado. Confira a separação e escolha uma opção.','info');
+    document.getElementById('pedidoManual').value='';
+  },e=>{processando=false;mostrarStatus(e.message,'erro')});
+}
+
+function conferenciaCorreta(){
+  if(!pedidoAtual||processando)return;
+  salvarConferencia({correta:'SIM'});
+}
+function mostrarFormularioErro(){document.getElementById('erroForm').classList.remove('oculto');document.getElementById('sku').focus()}
+function salvarComErro(){
+  if(!pedidoAtual||processando)return;
+  const gravidade=document.getElementById('gravidade').value;
+  if(!gravidade){mostrarStatus('Informe a gravidade do erro.','erro');return}
+  salvarConferencia({
+    correta:'NÃO',sku:document.getElementById('sku').value.trim(),
+    qtdSolicitada:document.getElementById('qtdSolicitada').value.trim(),
+    qtdSeparada:document.getElementById('qtdSeparada').value.trim(),
+    tipoErro:document.getElementById('tipoErro').value.trim(),gravidade:gravidade,
+    acaoTomada:document.getElementById('acaoTomada').value.trim(),observacao:document.getElementById('observacao').value.trim()
   });
 }
-function mostrarErroInicial(msg){const s=document.getElementById('separador');s.innerHTML='<option value="">Erro ao carregar</option>';document.getElementById('btnIniciar').disabled=true;document.getElementById('carregamento').textContent=msg+' Toque aqui para tentar novamente.';document.getElementById('carregamento').style.cursor='pointer';document.getElementById('carregamento').onclick=carregarSeparadores}
-carregarSeparadores();
-function iniciarConferencia(){const s=document.getElementById('separador');if(!s.value){alert('Selecione o seu nome.');return}separador=s.value;document.getElementById('separadorAtual').textContent=separador;document.getElementById('telaInicial').classList.add('oculto');document.getElementById('telaConferencia').classList.remove('oculto');ocultarStatus();carregarQuantidade();iniciarCamera()}
-function carregarQuantidade(){chamarApi({acao:'quantidade',separador:separador,conferente:separador},d=>{if(!d||!d.sucesso){mostrarStatus(d&&d.erro?d.erro:'Não foi possível carregar a quantidade.',true);return}contadorAtual=Number(d.quantidade||0);document.getElementById('contador').textContent=contadorAtual},e=>mostrarStatus(e.message,true))}
-function iniciarCamera(){scanner=new Html5Qrcode('reader');const formatos=[Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.CODE_93,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E];const config={fps:10,formatsToSupport:formatos,qrbox:(w,h)=>{const t=Math.min(w*.85,350);return{width:t,height:Math.min(t,180)}}};scanner.start({facingMode:'environment'},config,quandoCodigoForLido,()=>{}).catch(e=>mostrarStatus('Não foi possível iniciar a câmera. Verifique a permissão do navegador.',true))}
-function quandoCodigoForLido(codigo){codigo=String(codigo||'').trim();if(!codigo||processando)return;const agora=Date.now();if(codigo===ultimoCodigo&&agora-ultimoMomento<5000)return;ultimoCodigo=codigo;ultimoMomento=agora;registrarPedido(codigo)}
-function registrarPedido(pedido){processando=true;mostrarStatus('Registrando pedido '+pedido+'...',false);chamarApi({acao:'registrar',pedido:pedido,separador:separador,conferente:separador},d=>{if(!d||!d.sucesso){mostrarStatus(d&&d.erro?d.erro:'Não foi possível registrar o pedido.',true);processando=false;return}contadorAtual++;document.getElementById('contador').textContent=contadorAtual;document.getElementById('ultimo').classList.remove('oculto');document.getElementById('ultimoPedido').textContent=d.pedido;mostrarStatus('✓ Pedido '+d.pedido+' registrado!',false);processando=false},e=>{mostrarStatus(e.message,true);processando=false})}
-function finalizarConferencia(){if(scanner){scanner.stop().then(()=>{scanner.clear();voltarInicio()}).catch(()=>voltarInicio())}else voltarInicio()}
-function voltarInicio(){scanner=null;processando=false;ultimoCodigo='';ultimoMomento=0;document.getElementById('reader').innerHTML='';document.getElementById('telaConferencia').classList.add('oculto');document.getElementById('telaInicial').classList.remove('oculto');ocultarStatus()}
+function salvarConferencia(dados){
+  processando=true;mostrarStatus('Salvando conferência...','info');
+  chamarApi({acao:'salvarConferencia',pedido:pedidoAtual.pedido,conferente:conferente,...dados},d=>{
+    processando=false;
+    if(!d||!d.sucesso){mostrarStatus(d&&d.erro?d.erro:'Não foi possível salvar a conferência.','erro');return}
+    contadorAtual++;document.getElementById('contador').textContent=contadorAtual;
+    document.getElementById('ultimo').classList.remove('oculto');document.getElementById('ultimoPedido').textContent=d.pedido;
+    mostrarStatus('✓ Pedido '+d.pedido+' conferido com sucesso.','sucesso');
+    limparPedidoAtual();
+    setTimeout(()=>document.getElementById('pedidoManual').focus(),80);
+  },e=>{processando=false;mostrarStatus(e.message,'erro')});
+}
+function limparPedidoAtual(){
+  pedidoAtual=null;document.getElementById('pedidoCard').classList.add('oculto');document.getElementById('pergunta').classList.add('oculto');document.getElementById('erroForm').classList.add('oculto');
+  ['sku','qtdSolicitada','qtdSeparada','tipoErro','acaoTomada','observacao'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('gravidade').value='';
+}
+function cancelarPedido(){limparPedidoAtual();ocultarStatus();document.getElementById('pedidoManual').focus()}
+function finalizarConferencia(){
+  if(scanner){scanner.stop().then(()=>{scanner.clear();voltarInicio()}).catch(()=>voltarInicio())}else voltarInicio();
+}
+function voltarInicio(){
+  scanner=null;processando=false;pedidoAtual=null;document.getElementById('reader').innerHTML='';
+  document.getElementById('telaConferencia').classList.add('oculto');document.getElementById('telaInicial').classList.remove('oculto');ocultarStatus();carregarConferentes();
+}
 </script>
 </body>
 </html>
