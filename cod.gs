@@ -7,67 +7,64 @@ function doGet(e) {
   const parametros = (e && e.parameter) ? e.parameter : {};
   const acao = String(parametros.acao || '').trim();
   const callback = String(parametros.callback || '').trim();
-  let resultado;
 
   if (!acao) {
-    resultado = {
+    return responder_({
       sucesso: true,
-      mensagem: 'API Controle de Conferência funcionando.'
-    };
-    return responder_(resultado, callback);
+      mensagem: 'API Link Separadores funcionando.'
+    }, callback);
   }
 
   if (acao === 'separadores' || acao === 'conferentes') {
-    resultado = obterSeparadores_(e);
+    const resultado = obterSeparadores_(e);
 
-    // Compatibilidade com a versão antiga da aplicação.
     if (acao === 'conferentes') {
-      resultado = {
+      return responder_({
         sucesso: resultado.sucesso,
         conferentes: resultado.separadores || [],
         erro: resultado.erro || ''
-      };
+      }, callback);
     }
 
     return responder_(resultado, callback);
   }
 
   if (acao === 'registrar') {
-    resultado = registrarPedido_(e);
-    return responder_(resultado, callback);
+    return responder_(registrarPedido_(e), callback);
   }
 
   if (acao === 'quantidade') {
-    resultado = quantidadeHoje_(e);
-    return responder_(resultado, callback);
+    return responder_(quantidadeHoje_(e), callback);
   }
 
-  resultado = {
+  return responder_({
     sucesso: false,
     erro: 'Ação não reconhecida.'
-  };
-
-  return responder_(resultado, callback);
-}
-
-function validarChave_(e) {
-  const parametros = (e && e.parameter) ? e.parameter : {};
-  const chave = String(parametros.chave || '').trim();
-  return chave === CHAVE_APP;
+  }, callback);
 }
 
 function registrarPedido_(e) {
+  const lock = LockService.getScriptLock();
+
   try {
-    if (!validarChave_(e)) {
+    lock.waitLock(10000);
+
+    const parametros = (e && e.parameter) ? e.parameter : {};
+    const chave = String(parametros.chave || '').trim();
+
+    if (chave !== CHAVE_APP) {
       return { sucesso: false, erro: 'Chave inválida.' };
     }
 
-    const parametros = e.parameter || {};
     const pedido = String(parametros.pedido || '').trim();
 
-    // Aceita os dois nomes para manter compatibilidade com versões antigas.
+    // Compatibilidade com versões antigas e novas do aplicativo.
     const separador = String(
       parametros.separador || parametros.conferente || ''
+    ).trim();
+
+    const conferente = String(
+      parametros.conferente || parametros.separador || ''
     ).trim();
 
     if (!pedido) {
@@ -88,21 +85,82 @@ function registrarPedido_(e) {
       };
     }
 
+    // Evita duplicidade causada por leituras repetidas da câmera
+    // ou por dois aparelhos registrando o mesmo pedido ao mesmo tempo.
+    const ultimaLinha = aba.getLastRow();
+
+    if (ultimaLinha >= 2) {
+      const inicio = Math.max(2, ultimaLinha - 100);
+      const quantidadeLinhas = ultimaLinha - inicio + 1;
+      const registros = aba.getRange(inicio, 1, quantidadeLinhas, 5).getValues();
+
+      const agora = new Date();
+      const hoje = Utilities.formatDate(
+        agora,
+        Session.getScriptTimeZone(),
+        'dd/MM/yyyy'
+      );
+
+      for (let i = registros.length - 1; i >= 0; i--) {
+        const linha = registros[i];
+        const data = String(linha[0] || '').trim();
+        const pedidoRegistrado = String(linha[2] || '').trim();
+        const separadorRegistrado = String(linha[3] || '').trim();
+
+        if (
+          data === hoje &&
+          pedidoRegistrado === pedido &&
+          separadorRegistrado === separador
+        ) {
+          return {
+            sucesso: true,
+            duplicado: true,
+            pedido: pedido,
+            separador: separador,
+            conferente: conferente,
+            mensagem: 'Pedido já registrado.'
+          };
+        }
+      }
+    }
+
     const agora = new Date();
-    const fuso = Session.getScriptTimeZone();
-    const data = Utilities.formatDate(agora, fuso, 'dd/MM/yyyy');
-    const hora = Utilities.formatDate(agora, fuso, 'HH:mm:ss');
-    const horaAtual = Number(Utilities.formatDate(agora, fuso, 'HH'));
-    const minutoAtual = Number(Utilities.formatDate(agora, fuso, 'mm'));
+
+    const data = Utilities.formatDate(
+      agora,
+      Session.getScriptTimeZone(),
+      'dd/MM/yyyy'
+    );
+
+    const hora = Utilities.formatDate(
+      agora,
+      Session.getScriptTimeZone(),
+      'HH:mm:ss'
+    );
+
+    const horaAtual = Number(
+      Utilities.formatDate(agora, Session.getScriptTimeZone(), 'HH')
+    );
+
+    const minutoAtual = Number(
+      Utilities.formatDate(agora, Session.getScriptTimeZone(), 'mm')
+    );
+
     const minutosDoDia = (horaAtual * 60) + minutoAtual;
+
+    // Até 12:00 = Manhã. Depois de 12:00 = Tarde.
     const turno = minutosDoDia <= 720 ? 'Manhã' : 'Tarde';
+
+    // A planilha possui:
+    // A Data | B Turno | C Pedido | D Separador | E Conferente
     const proximaLinha = aba.getLastRow() + 1;
 
-    aba.getRange(proximaLinha, 1, 1, 4).setValues([[
+    aba.getRange(proximaLinha, 1, 1, 5).setValues([[
       data,
       turno,
       pedido,
-      separador
+      separador,
+      conferente
     ]]);
 
     SpreadsheetApp.flush();
@@ -111,23 +169,37 @@ function registrarPedido_(e) {
       sucesso: true,
       pedido: pedido,
       separador: separador,
-      conferente: separador,
+      conferente: conferente,
       data: data,
       hora: hora,
       turno: turno
     };
+
   } catch (erro) {
     return {
       sucesso: false,
-      erro: erro.message || String(erro)
+      erro: erro && erro.message
+        ? erro.message
+        : 'Erro desconhecido ao registrar o pedido.'
     };
+
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch (e) {}
   }
 }
 
 function obterSeparadores_(e) {
   try {
-    if (!validarChave_(e)) {
-      return { sucesso: false, erro: 'Chave inválida.' };
+    const parametros = (e && e.parameter) ? e.parameter : {};
+    const chave = String(parametros.chave || '').trim();
+
+    if (chave !== CHAVE_APP) {
+      return {
+        sucesso: false,
+        erro: 'Chave inválida.'
+      };
     }
 
     const planilha = SpreadsheetApp.getActiveSpreadsheet();
@@ -143,10 +215,14 @@ function obterSeparadores_(e) {
     const ultimaLinha = aba.getLastRow();
 
     if (ultimaLinha < 2) {
-      return { sucesso: true, separadores: [] };
+      return {
+        sucesso: true,
+        separadores: []
+      };
     }
 
-    const nomes = aba.getRange(2, 1, ultimaLinha - 1, 1)
+    const nomes = aba
+      .getRange(2, 1, ultimaLinha - 1, 1)
       .getValues()
       .flat()
       .map(function(nome) {
@@ -156,27 +232,33 @@ function obterSeparadores_(e) {
         return nome !== '';
       });
 
-    const separadores = [...new Set(nomes)];
-
     return {
       sucesso: true,
-      separadores: separadores
+      separadores: [...new Set(nomes)]
     };
+
   } catch (erro) {
     return {
       sucesso: false,
-      erro: erro.message || String(erro)
+      erro: erro && erro.message
+        ? erro.message
+        : 'Erro ao carregar os separadores.'
     };
   }
 }
 
 function quantidadeHoje_(e) {
   try {
-    if (!validarChave_(e)) {
-      return { sucesso: false, erro: 'Chave inválida.' };
+    const parametros = (e && e.parameter) ? e.parameter : {};
+    const chave = String(parametros.chave || '').trim();
+
+    if (chave !== CHAVE_APP) {
+      return {
+        sucesso: false,
+        erro: 'Chave inválida.'
+      };
     }
 
-    const parametros = e.parameter || {};
     const separador = String(
       parametros.separador || parametros.conferente || ''
     ).trim();
@@ -185,10 +267,16 @@ function quantidadeHoje_(e) {
     const aba = planilha.getSheetByName(ABA_LANCAMENTOS);
 
     if (!aba || aba.getLastRow() < 2) {
-      return { sucesso: true, quantidade: 0 };
+      return {
+        sucesso: true,
+        quantidade: 0
+      };
     }
 
-    const dados = aba.getRange(2, 1, aba.getLastRow() - 1, 4).getValues();
+    const dados = aba
+      .getRange(2, 1, aba.getLastRow() - 1, 5)
+      .getValues();
+
     const hoje = Utilities.formatDate(
       new Date(),
       Session.getScriptTimeZone(),
@@ -201,7 +289,10 @@ function quantidadeHoje_(e) {
       const data = String(linha[0] || '').trim();
       const nomeSeparador = String(linha[3] || '').trim();
 
-      if (data === hoje && (!separador || nomeSeparador === separador)) {
+      if (
+        data === hoje &&
+        (!separador || nomeSeparador === separador)
+      ) {
         quantidade++;
       }
     });
@@ -210,10 +301,13 @@ function quantidadeHoje_(e) {
       sucesso: true,
       quantidade: quantidade
     };
+
   } catch (erro) {
     return {
       sucesso: false,
-      erro: erro.message || String(erro)
+      erro: erro && erro.message
+        ? erro.message
+        : 'Erro ao carregar a quantidade.'
     };
   }
 }
@@ -221,7 +315,10 @@ function quantidadeHoje_(e) {
 function responder_(objeto, callback) {
   const json = JSON.stringify(objeto);
 
-  if (callback && /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(callback)) {
+  if (
+    callback &&
+    /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(callback)
+  ) {
     return ContentService
       .createTextOutput(callback + '(' + json + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
